@@ -57,7 +57,6 @@ lct0805 <- table(getValues(lct.0805))
 ### 2. LSP dates
 ## A. H12V04 tile
 tile <- 'h12v04'
-
 # VIIRS 
 for(yy in 2012:2014){
   
@@ -85,7 +84,6 @@ for(yy in 2012:2014){
     vv120414 <- rast
   }
 }
-
 # C6
 for(yy in 2012:2014){
   phe <- c('Greenup','Maturity','Senescence','Dormancy')  
@@ -112,7 +110,6 @@ for(yy in 2012:2014){
     mm120414 <- rast
   }
 }
-
  
 ## B. H08V05 and H11V05 tiles
 # VIIRS 0805 and 1104
@@ -135,7 +132,12 @@ for(tt in 1:2){
     data[data>30000] <- NA
     data2 <- array(data,c(nbands, ncol, nrow))
     data2 <- aperm(data2, c(3,2,1)) #for transposing
-    rast[[i]] <- brick(data2,xmn=ext0805@extent@xmin,xmx=ext0805@extent@xmax,ymn=ext0805@extent@ymin,ymx=ext0805@extent@ymax)
+    if(tt==1){
+      rast[[i]] <- brick(data2,xmn=ext0805@extent@xmin,xmx=ext0805@extent@xmax,ymn=ext0805@extent@ymin,ymx=ext0805@extent@ymax)  
+    }else{
+      rast[[i]] <- brick(data2,xmn=ext1104@extent@xmin,xmx=ext1104@extent@xmax,ymn=ext1104@extent@ymin,ymx=ext1104@extent@ymax)
+    }
+    
   }
   if(tt==1){
     vv0805 <- rast  
@@ -143,7 +145,6 @@ for(tt in 1:2){
     vv1104 <- rast  
   }
 }
-
 # MODIS 0805 and 1104
 for(tt in 1:2){
   year <- 2013
@@ -162,7 +163,11 @@ for(tt in 1:2){
     data1 <- data - as.numeric(as.Date(paste(year-1,'-12-31',sep='')))
     data2 <- array(data1,c(nbands, ncol, nrow))
     data2 <- aperm(data2, c(3,2,1)) #for transposing
-    aa <- brick(data2,xmn=ext1204@extent@xmin,xmx=ext1204@extent@xmax,ymn=ext1204@extent@ymin,ymx=ext1204@extent@ymax,crs=ext1204@crs)
+    if(tt==1){
+      aa <- brick(data2,xmn=ext0805@extent@xmin,xmx=ext0805@extent@xmax,ymn=ext0805@extent@ymin,ymx=ext0805@extent@ymax)  
+    }else{
+      aa <- brick(data2,xmn=ext1104@extent@xmin,xmx=ext1104@extent@xmax,ymn=ext1104@extent@ymin,ymx=ext1104@extent@ymax)
+    }
     rast[[vari]] <- aa[[1]]  
   }
   if(tt==1){
@@ -176,7 +181,7 @@ for(tt in 1:2){
 ### 3. Overview via raster and histgram
 phe.plot <- function(rast1,rast2,tile,year,vari){
   
-  par(mfcol=c(2,2),mgp=c(2,1,0),oma=c(1,1,1,1),mar=c(3,3,2.5,2.5)) 
+  par(mfrow=c(2,2),mgp=c(2,1,0),oma=c(1,1,1,1),mar=c(3,3,2.5,2.5)) 
   
   values(lct.1204)[values(lct.1204!=0)] <- NA
   values(lct.1104)[values(lct.1104!=0)] <- NA
@@ -184,10 +189,16 @@ phe.plot <- function(rast1,rast2,tile,year,vari){
   
   if(as.numeric(substr(tile,2,3))==12){
     wm <- lct.1204 
+    lp <- 2400*2400 - sum(values(wm)==0,na.rm=T)
+    yylim=c(0,0.035)
   }else if(as.numeric(substr(tile,2,3))==11){
     wm <- lct.1104 
+    lp <- 2400*2400 - sum(values(wm)==0,na.rm=T)
+    yylim=c(0,0.035)
   }else{
     wm <- lct.0805 
+    lp <- 2400*2400 - sum(values(wm)==0,na.rm=T)
+    yylim=c(0,0.022)
   }
   
   bb <- rast1
@@ -204,15 +215,10 @@ phe.plot <- function(rast1,rast2,tile,year,vari){
   plot(bb,zlim=c(lwp,upp),box=F,bty = "n",xaxt = "n", yaxt = "n",
        col=mycol,colNA='grey75',legend=F,main=paste("VIIRS_",tile,"_",year,"_",vari,sep=""))
   plot(wm,add=T,col='grey45',legend=F)
-  plot(bb,legend.only=T,col=mycol,zlim=c(lwp,upp),
-       legend.width=1.5,legend.shrink=0.6,
-       smallplot=c(0.8,0.83,0.2,0.8),
-       axis.args=list(at=leg.int,cex.axis=1.2,font=1,
-                      labels=c(paste('<',lwp,sep=''),leg.int[2:4],paste('>',upp,sep='')))) 
-  hist(rast1,xlim=c(-100,450),breaks = seq(-400,700,1),probability=T,
-       main=NULL,cex.axis=1,xlab="Day of year",ylab="Density",cex.lab=1)
   
   bb <- rast2
+  values(bb)[values(bb)>=upp] <- upp
+  values(bb)[values(bb)<=lwp] <- lwp
   
   plot(bb,zlim=c(lwp,upp),box=F,bty = "n",xaxt = "n", yaxt = "n",
        col=mycol,colNA='grey75',legend=F,main=paste("MODIS_",tile,"_",year,"_",vari,sep=""))
@@ -222,24 +228,43 @@ phe.plot <- function(rast1,rast2,tile,year,vari){
        smallplot=c(0.80,0.83,0.2,0.8),
        axis.args=list(at=leg.int,cex.axis=1.2,font=1,
                       labels=c(paste('<',lwp,sep=''),leg.int[2:4],paste('>',upp,sep='')))) 
-  hist(rast2,xlim=c(-100,450),breaks = seq(-400,700,1),probability=T,
-       main=NULL,cex.axis=1,xlab="Day of year",ylab="Density",cex.lab=1)
   
+  dd1 <- getValues(rast1)
+  dd2 <- getValues(rast2)
+  
+  hist(dd1,xlim=c(-100,450),ylim=yylim,
+       breaks = seq(-400,700,1),probability=T,lty="blank",col=rgb(1,0,0,0.5),
+       main=NULL,cex.axis=1,xlab="Day of year",ylab="Density",cex.lab=1)
+  hist(dd2,xlim=c(-100,450),breaks = seq(-400,700,1),probability=T,lty="blank",col=rgb(0,0,1,0.5),
+       main=NULL,cex.axis=1,xlab="Day of year",ylab="Density",cex.lab=1,add=T)
+  legend("topright",c("VIIRS","MODIS"),pch=22,pt.bg=c(rgb(1,0,0,0.5),rgb(0,0,1,0.5)),cex=1.2,bty="n")  
+  
+  pp1 <- 1 - sum(!is.na(dd1))/lp
+  pp2 <- 1 - sum(!is.na(dd2))/lp
+  
+  barplot(c(pp1,pp2),ylim=c(0,1),name=c("VIIRS","MODIS"),ylab="NA fraction (land only)")
+  text(0.7,pp1,round(pp1,3),pos=3)
+  text(1.9,pp2,round(pp2,3),pos=3)
 }
 
 setwd('/projectnb/modislc/users/mkmoon/VIIRS/figures/')
 pdf(file=paste('VIvsC6_diag.pdf',sep=''),width=9,height=7)
 
-for(yy in 2012:2014){
-  for(i in 1:4){
-    phe.plot(vv120412[[i]][[1]],mm120412[[i]][[1]],"H12V04",yy,phe[i])
-  }
+for(i in 1:4){
+  phe.plot(vv120412[[i]][[1]],mm120412[[i]][[1]],"H12V04",2012,phe[i])
 }
 for(i in 1:4){
-  phe.plot(vv0805[[i]][[1]],mm0805[[i]][[1]],"H12V04",2013,phe[i])
+  phe.plot(vv120413[[i]][[1]],mm120413[[i]][[1]],"H12V04",2013,phe[i])
 }
 for(i in 1:4){
-  phe.plot(vv1104[[i]][[1]],mm1104[[i]][[1]],"H12V04",2013,phe[i])
+  phe.plot(vv120414[[i]][[1]],mm120414[[i]][[1]],"H12V04",2014,phe[i])
+}
+
+for(i in 1:4){
+  phe.plot(vv1104[[i]][[1]],mm1104[[i]][[1]],"H11V04",2013,phe[i])
+}
+for(i in 1:4){
+  phe.plot(vv0805[[i]][[1]],mm0805[[i]][[1]],"H08V05",2013,phe[i])
 }
 
 dev.off()
