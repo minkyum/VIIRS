@@ -360,4 +360,13 @@ for(i in 1:nsam){
 }
 
 setwd('/projectnb/modislc/users/mkmoon/VIIRS/R_data/')
-save(mmphe,vvphe,lanbymod,quant,file=paste('landsat_',scene,'_',tt,'.RData',sep=''))
+if(tt==41){
+  save(mmphe,vvphe,lanbymod,quant,file=paste('landsat_c6_2013_sos_',scene,'.RData',sep=''))
+}else if(tt==40){
+  save(mmphe,vvphe,lanbymod,quant,file=paste('landsat_c6_2012_sos_',scene,'.RData',sep=''))
+}else if(tt==73){
+  save(mmphe,vvphe,lanbymod,quant,file=paste('landsat_c6_2013_eos_',scene,'.RData',sep=''))
+}else{
+  save(mmphe,vvphe,lanbymod,quant,file=paste('landsat_c6_2012_eos_',scene,'.RData',sep=''))
+}
+
