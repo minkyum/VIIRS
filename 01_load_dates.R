@@ -240,34 +240,36 @@ phe.plot <- function(rast1,rast2,tile,year,vari){
   values(bb)[values(bb)<=lwp] <- lwp
   values(bb)[values(wm)==0] <- 32727
   
-  par(fig=c(0,0.333,0.5,1),mgp=c(1.5,0.5,0),oma=c(1,1,1,1),mar=c(1,1,1,1)) 
   bp <- c(seq(lwp,upp),32727)
   mycol <- brewer.pal(11,'Spectral')
   mycol <- rev(colorRampPalette(mycol)(upp-lwp))
+  
+  par(fig=c(0,0.333,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5)) 
   plot(bb,box=F,bty = "n",xaxt = "n", yaxt = "n",breaks=bp,
-       col=c(mycol,'grey45'),colNA='grey75',legend=T,main=paste("VIIRS_",tile,"_",year,"_",vari,sep=""))
-#   par(fig=c(0,0.333,0.5,1),mgp=c(1.5,0.5,0),oma=c(1,1,1,1),mar=c(1,1,1,1),new=T)
+       col=c(mycol,'grey45'),colNA='grey75',legend=F,main=paste("VIIRS_",tile,"_",year,"_",vari,sep=""))
+#   par(fig=c(0,0.333,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.8,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)
 #   plot(wm,add=T,col='grey45',legend=F)
-  par(fig=c(0,0.333,0.5,1),mgp=c(1.5,0.5,0),oma=c(1,1,1,1),mar=c(1,1,1,1),new=T)
+  par(fig=c(0,0.333,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)
   plot(bb,legend.only=T,col=mycol,zlim=c(lwp,upp),
        legend.width=1.5,legend.shrink=0.6,
-       smallplot=c(0.80,0.83,0.2,0.8),
+       smallplot=c(0.83,0.86,0.2,0.8),
        axis.args=list(at=leg.int,cex.axis=1,font=1,
                       labels=c(paste('<',lwp,sep=''),leg.int[2:4],paste('>',upp,sep='')))) 
   
   bb <- rast2
   values(bb)[values(bb)>=upp] <- upp
   values(bb)[values(bb)<=lwp] <- lwp
+  values(bb)[values(wm)==0] <- 32727
   
-    par(fig=c(0.333,0.666,0.5,1),mgp=c(1.5,0.5,0),oma=c(1,1,1,1),mar=c(1,1,1,1),new=T)  
-  plot(bb,zlim=c(lwp,upp),box=F,bty = "n",xaxt = "n", yaxt = "n",
-       col=mycol,colNA='grey75',legend=F,main=paste("MODIS_",tile,"_",year,"_",vari,sep=""))
-#   par(fig=c(0.333,0.666,0.5,1),mgp=c(1.5,0.5,0),oma=c(1,1,1,1),mar=c(1,1,1,1),new=T)
+  par(fig=c(0.333,0.666,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)  
+  plot(bb,box=F,bty = "n",xaxt = "n", yaxt = "n",breaks=bp,
+       col=c(mycol,'grey45'),colNA='grey75',legend=F,main=paste("MODIS_",tile,"_",year,"_",vari,sep=""))
+#   par(fig=c(0.333,0.666,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)
 #   plot(wm,add=T,col='grey45',legend=F)
-  par(fig=c(0.333,0.666,0.5,1),mgp=c(1.5,0.5,0),oma=c(1,1,1,1),mar=c(1,1,1,1),new=T)
+  par(fig=c(0.333,0.666,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)
   plot(bb,legend.only=T,col=mycol,zlim=c(lwp,upp),
        legend.width=1.5,legend.shrink=0.6,
-       smallplot=c(0.80,0.83,0.2,0.8),
+       smallplot=c(0.83,0.86,0.2,0.8),
        axis.args=list(at=leg.int,cex.axis=1,font=1,
                       labels=c(paste('<',lwp,sep=''),leg.int[2:4],paste('>',upp,sep='')))) 
   
@@ -301,19 +303,21 @@ phe.plot <- function(rast1,rast2,tile,year,vari){
   leg.int <- round(seq(lwp,upp,length.out = 5))  
   values(bb)[values(bb)>=upp] <- upp
   values(bb)[values(bb)<=lwp] <- lwp
-  
+  values(bb)[values(wm)==0] <- 32727
+    
+  bp <- c(seq(lwp,upp),32727)
   mycol <- brewer.pal(11,'RdBu')
-  mycol <- rev(colorRampPalette(mycol)(1000))
-  
-  par(fig=c(0.666,1,0.5,1),mgp=c(1.5,0.5,0),oma=c(1,1,1,1),mar=c(1,1,1,1),new=T)  
-  plot(bb,zlim=c(lwp,upp),box=F,bty = "n",xaxt = "n", yaxt = "n",
-       col=mycol,colNA='grey75',legend=F,main=paste("VI-MO_",tile,"_",year,"_",vari,sep=""))
-#   par(fig=c(0.666,1,0.5,1),mgp=c(1.5,0.5,0),oma=c(1,1,1,1),mar=c(1,1,1,1),new=T)
+  mycol <- rev(colorRampPalette(mycol)(upp-lwp))
+
+  par(fig=c(0.666,1,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)  
+  plot(bb,box=F,bty = "n",xaxt = "n", yaxt = "n",breaks=bp,
+       col=c(mycol,'grey45'),colNA='grey75',legend=F,main=paste("VI-MO_",tile,"_",year,"_",vari,sep=""))
+#   par(fig=c(0.666,1,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)
 #   plot(wm,add=T,col='grey45',legend=F)
-  par(fig=c(0.666,1,0.5,1),mgp=c(1.5,0.5,0),oma=c(1,1,1,1),mar=c(1,1,1,1),new=T)
+  par(fig=c(0.666,1,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)
   plot(bb,legend.only=T,col=mycol,zlim=c(lwp,upp),
        legend.width=1.5,legend.shrink=0.6,
-       smallplot=c(0.80,0.83,0.2,0.8),
+       smallplot=c(0.83,0.86,0.2,0.8),
        axis.args=list(at=leg.int,cex.axis=1,font=1,
                       labels=c(paste('<',lwp,sep=''),leg.int[2:4],paste('>',upp,sep='')))) 
 
