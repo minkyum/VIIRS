@@ -1,25 +1,47 @@
 library(RColorBrewer)
 
+## Select collection (6 for C6 and 5 for C5)
+clt <- 6
+
+## Save fitures as PDF
+setwd('/projectnb/modislc/users/mkmoon/VIIRS/figures/')
+pdf(file=paste('1to1_percentile_c',clt,'.pdf',sep=''),width=12,height=8)  
+
 ### Load data
-setwd('/projectnb/modislc/users/mkmoon/VIIRS/R_data/')
+setwd('/projectnb/modislc/users/mkmoon/VIIRS/R_data/landsat/')
 scene <- c('mwp_harvard','ah_bartlett','mwp_cary','ah_hubbard','mwp_proctor','mws_boundary_waters')
 lphe <- vector('list',12)
 mphe <- vector('list',12)
 vphe <- vector('list',12)
-qphe <- vector('list',12)
+npix <- vector('list',12)
 
 ### SOS
-for(i in 1:12){
-  if(i<=6){
-    load(paste('landsat_c6_2013_sos_',scene[i],'.RData',sep=''))  
-  }else{
-    load(paste('landsat_c6_2012_sos_',scene[i-6],'.RData',sep=''))  
+if(clt==6){
+  for(i in 1:12){
+    if(i<=6){
+      load(paste('landsat_c6_2013_sos_',scene[i],'.RData',sep=''))  
+    }else{
+      load(paste('landsat_c6_2012_sos_',scene[i-6],'.RData',sep=''))  
+    }
+    lphe[[i]] <- lanbymod
+    mphe[[i]] <- mmphe
+    vphe[[i]] <- vvphe
+    npix[[i]] <- nlpix  
+  }  
+}else{
+  for(i in 1:12){
+    if(i<=6){
+      load(paste('landsat_c5_2013_sos_',scene[i],'.RData',sep=''))  
+    }else{
+      load(paste('landsat_c5_2012_sos_',scene[i-6],'.RData',sep=''))  
+    }
+    lphe[[i]] <- lanbymod
+    mphe[[i]] <- mmphe
+    vphe[[i]] <- vvphe
+    npix[[i]] <- nlpix  
   }
-  lphe[[i]] <- lanbymod
-  mphe[[i]] <- mmphe
-  vphe[[i]] <- vvphe
-  qphe[[i]] <- quant  
 }
+
 
 # Take a mean for each panel (i.e. 3 by 3 MODIS pixel)
 pixmean <- vector('list',12)
@@ -64,13 +86,13 @@ plot_1to1 <- function(xmean,ymean,xsd,ysd,xlabel,ylabel,start){
        xlim=c(start,(start+60)),ylim=c(start,(start+60)),
        xlab=xlabel,
        ylab=ylabel,
-       cex.lab=1.1,cex.axis=1.0)
+       cex.lab=1.5,cex.axis=1.3)
   arrows(xmean,ymean-ysd,xmean,ymean+ysd,
          length=0.05,angle=0)
   arrows(xmean-xsd,ymean,xmean+xsd,ymean,
          length=0.05,angle=0)
-  abline(0,1)
-  abline(lm(ymean~xmean),lwd=1.3,lty=5)
+  abline(0,1,lty=2)
+  abline(lm(ymean~xmean),lwd=1)
   points(xmean,ymean,bg=mycol,pch=c(rep(21,6),rep(23,5)),cex=1.7)
   legend('topleft',c('Harvard','Bartlett','Cary','Hubbard','Proctor','Boundary waters'),
          bty='n',pch=21,pt.bg=mycol,pt.cex=1.5)
@@ -83,19 +105,19 @@ plot_1to1 <- function(xmean,ymean,xsd,ysd,xlabel,ylabel,start){
   b0c1 <- round(b0+reg$coefficients[3],1)
   b0c2 <- round(b0-reg$coefficients[3],1)
   rmse <- round(sqrt(mean((ymean-xmean)^2)),1)
-  text((start+33-1),(start+13),expression(paste(R^2,'=')),pos=4,cex=0.8)
-  text((start+38-1),(start+13),rseq,pos=4,cex=0.8)
+  text((start+33-1),(start+13),expression(paste(R^2,'=')),pos=4,cex=1)
+  text((start+38-1),(start+13),rseq,pos=4,cex=1)
   if(reg$coefficient[8]<0.01){
-    text((start+45-1),(start+13),substitute(paste('(', italic(p),' < 0.01)',sep='')),pos=4,cex=0.8)
+    text((start+45-1),(start+13),substitute(paste('(', italic(p),' < 0.01)',sep='')),pos=4,cex=1)
   }else{
-    text((start+45-1),(start+13),substitute(paste('(', italic(p),' = ',sep='')),pos=4,cex=0.8)
-    text((start+50-1),(start+13),paste(round(reg$coefficient[8],2),' )',sep=''),pos=4,cex=0.8)
+    text((start+45-1),(start+13),substitute(paste('(', italic(p),' = ',sep='')),pos=4,cex=1)
+    text((start+50-1),(start+13),paste(round(reg$coefficient[8],2),' )',sep=''),pos=4,cex=1)
   }
-  text((start+33-1),(start+9),paste('RMSE =',rmse),pos=4,cex=0.8)
-  text((start+33-1),(start+5),expression(paste(beta[1],'=')),pos=4,cex=0.8)
-  text((start+38-1),(start+5),paste(b1,' (',b1c1,',',b1c2,')',sep=''),pos=4,cex=0.8)
-  text((start+33-1),(start+1),expression(paste(beta[0],'=')),pos=4,cex=0.8)
-  text((start+38-1),(start+1),paste(b0,' (',b0c1,',',b0c2,')',sep=''),pos=4,cex=0.8)
+  text((start+33-1),(start+9),paste('RMSE =',rmse),pos=4,cex=1)
+  text((start+33-1),(start+5),expression(paste(beta[1],'=')),pos=4,cex=1)
+  text((start+38-1),(start+5),paste(b1,' (',b1c1,',',b1c2,')',sep=''),pos=4,cex=1)
+  text((start+33-1),(start+1),expression(paste(beta[0],'=')),pos=4,cex=1)
+  text((start+38-1),(start+1),paste(b0,' (',b0c1,',',b0c2,')',sep=''),pos=4,cex=1)
 
   return(reg$coefficient[8])
 }
@@ -107,17 +129,32 @@ plot_1to1(mesd[,2],mesd[,3],mesd[,5],mesd[,6],'VIIRS SOS','Landsat SOS',110)
 
 
 ### EOS
-for(i in 1:12){
-  if(i<=6){
-    load(paste('landsat_c6_2013_eos_',scene[i],'.RData',sep=''))  
-  }else{
-    load(paste('landsat_c6_2012_eos_',scene[i-6],'.RData',sep=''))  
+if(clt==6){
+  for(i in 1:12){
+    if(i<=6){
+      load(paste('landsat_c6_2013_eos_',scene[i],'.RData',sep=''))  
+    }else{
+      load(paste('landsat_c6_2012_eos_',scene[i-6],'.RData',sep=''))  
+    }
+    lphe[[i]] <- lanbymod
+    mphe[[i]] <- mmphe
+    vphe[[i]] <- vvphe
+    npix[[i]] <- nlpix  
   }
-  lphe[[i]] <- lanbymod
-  mphe[[i]] <- mmphe
-  vphe[[i]] <- vvphe
-  qphe[[i]] <- quant  
+}else{
+  for(i in 1:12){
+    if(i<=6){
+      load(paste('landsat_c5_2013_eos_',scene[i],'.RData',sep=''))  
+    }else{
+      load(paste('landsat_c5_2012_eos_',scene[i-6],'.RData',sep=''))  
+    }
+    lphe[[i]] <- lanbymod
+    mphe[[i]] <- mmphe
+    vphe[[i]] <- vvphe
+    npix[[i]] <- nlpix  
+  }  
 }
+
 
 # Take a mean for each panel (i.e. 3 by 3 MODIS pixel)
 pixmean <- vector('list',12)
@@ -163,43 +200,12 @@ plot_1to1(mesd[,2],mesd[,3],mesd[,5],mesd[,6],'VIIRS EOS','Landsat EOS',240)
 
 
 ### Percentile for LSP
-## SOS
 library(vioplot)
-for(i in 1:12){
-  if(i<=6){
-    load(paste('landsat_c6_2013_sos_',scene[i],'.RData',sep=''))  
-  }else{
-    load(paste('landsat_c6_2012_sos_',scene[i-6],'.RData',sep=''))  
-  }
-  lphe[[i]] <- lanbymod
-  mphe[[i]] <- mmphe
-  vphe[[i]] <- vvphe
-  qphe[[i]] <- quant  
-}
-
-mq <- vector('list',11)
-vq <- vector('list',11)
-for(i in 1:11){
-  for(j in 1:1000){
-    if(sum(!is.na(lphe[[i]][j,]))>=1000){
-      temp <- ecdf(lphe[[i]][j,])
-      mq[[i]][j] <- temp(mphe[[i]][j])
-      vq[[i]][j] <- temp(vphe[[i]][j])
-    }else{
-      mq[[i]][j] <- NA
-      vq[[i]][j] <- NA
-    }  
-  }
-  mq[[i]] <- na.omit(mq[[i]])
-  vq[[i]] <- na.omit(vq[[i]])
-}
-
 mycol <- brewer.pal(5,'Set1')
 mvio <- function (x, ..., range = 1.5, h = NULL, ylim = NULL, names = NULL, 
                   horizontal = FALSE, col = "magenta", border = "black", lty = 1, 
                   lwd = 1, rectCol = "black", colMed = "white", pchMed = 19, 
-                  at, add = FALSE, wex = 1, drawRect = TRUE) 
-{
+                  at, add = FALSE, wex = 1, drawRect = TRUE){
   datas <- list(x, ...)
   n <- length(datas)
   if (missing(at)) 
@@ -282,7 +288,7 @@ mvio <- function (x, ..., range = 1.5, h = NULL, ylim = NULL, names = NULL,
     box()
     for (i in 1:n) {
       polygon(c(base[[i]], rev(base[[i]])), c(at[i] - height[[i]], 
-              rev(at[i] + height[[i]])), col = col[i], border = border, 
+                                              rev(at[i] + height[[i]])), col = col[i], border = border, 
               lty = lty, lwd = lwd)
       if (drawRect) {
         lines(c(lower[i], upper[i]), at[c(i, i)], lwd = lwd, 
@@ -296,27 +302,100 @@ mvio <- function (x, ..., range = 1.5, h = NULL, ylim = NULL, names = NULL,
   invisible(list(upper = upper, lower = lower, median = med, 
                  q1 = q1, q3 = q3))
 }
+plot_vio <- function(phe){
+  # Get quantile
+  mq <- vector('list',11)
+  vq <- vector('list',11)
+  for(i in 1:11){
+    for(j in 1:1000){
+      temp <- ecdf(lphe[[i]][j,])
+      mq[[i]][j] <- temp(mphe[[i]][j])
+      vq[[i]][j] <- temp(vphe[[i]][j])  
+    }
+    mq[[i]] <- na.omit(mq[[i]])
+    vq[[i]] <- na.omit(vq[[i]])
+  }
+  
+  par(mfrow=c(2,1),oma=c(1,1,1,1),mar=c(3,3,3,3),mgp=c(2.5,1,0))
+  plot(0:1,0:1,xlim=c(0,14.5),ylim=c(0,1),type='n',axes=F,ann=F)
+  mvio(mq[[1]],vq[[1]],mq[[2]],vq[[2]],mq[[3]],vq[[3]],
+       mq[[4]],vq[[4]],mq[[5]],vq[[5]],
+       at=c(1,2,4,5,7,8,10,11,13,14),col=rep(mycol,each=2),add=T)
+  axis(1,at=c(1,2,4,5,7,8,10,11,13,14),
+       c('M.Ha','V.Ha','M.Ba','V.Ba','M.Ca','V.Ca','M.Hu','V.Hu','M.Pr','V.Pr'),
+       cex.axis=1.1)
+  axis(2,at=seq(0,1,0.2),seq(0,100,20),cex.axis=0.9)
+  mtext('Percentile for LSP (%)',2,line=2.5,cex=1.1)
+  text(0,0.9,phe,cex=0.8)
+  text(0,0.8,2013,cex=0.8)
+  
+  plot(0:1,0:1,xlim=c(0,14.5),ylim=c(0,1),type='n',axes=F,ann=F)
+  mvio(mq[[6]],vq[[6]],mq[[7]],vq[[7]],mq[[8]],vq[[8]],
+       mq[[9]],vq[[9]],mq[[10]],vq[[10]],
+       at=c(1,2,4,5,7,8,10,11,13,14),col=rep(mycol,each=2),add=T)
+  axis(1,at=c(1,2,4,5,7,8,10,11,13,14),
+       c('M.Ha','V.Ha','M.Ba','V.Ba','M.Ca','V.Ca','M.Hu','V.Hu','M.Pr','V.Pr'),
+       cex.axis=1.1)
+  axis(2,at=seq(0,1,0.2),seq(0,100,20),cex.axis=0.9)
+  mtext('Percentile for LSP (%)',2,line=2.5,cex=1.1)
+  text(0,0.9,phe,cex=0.8)
+  text(0,0.8,2012,cex=0.8)
+}
 
+## SOS
+if(clt==6){
+  for(i in 1:12){
+    if(i<=6){
+      load(paste('landsat_c6_2013_sos_',scene[i],'.RData',sep=''))  
+    }else{
+      load(paste('landsat_c6_2012_sos_',scene[i-6],'.RData',sep=''))  
+    }
+    lphe[[i]] <- lanbymod
+    mphe[[i]] <- mmphe
+    vphe[[i]] <- vvphe
+    npix[[i]] <- nlpix  
+  }  
+}else{
+  for(i in 1:12){
+    if(i<=6){
+      load(paste('landsat_c5_2013_sos_',scene[i],'.RData',sep=''))  
+    }else{
+      load(paste('landsat_c5_2012_sos_',scene[i-6],'.RData',sep=''))  
+    }
+    lphe[[i]] <- lanbymod
+    mphe[[i]] <- mmphe
+    vphe[[i]] <- vvphe
+    npix[[i]] <- nlpix  
+  }
+}
+plot_vio('SOS')
 
-par(mfrow=c(2,1),oma=c(1,1,1,1),mar=c(3,3,3,3),mgp=c(2.5,1,0))
-plot(0:1,0:1,xlim=c(0,14.5),ylim=c(0,1),type='n',axes=F,ann=F)
-mvio(mq[[1]],vq[[1]],mq[[2]],vq[[2]],mq[[3]],vq[[3]],
-     mq[[4]],vq[[4]],mq[[5]],vq[[5]],
-     at=c(1,2,4,5,7,8,10,11,13,14),col=rep(mycol,each=2),add=T)
-axis(1,at=c(1,2,4,5,7,8,10,11,13,14),
-     c('M.Ha','V.Ha','M.Ba','V.Ba','M.Ca','V.Ca','M.Hu','V.Hu','M.Pr','V.Pr'),
-     cex.axis=0.8)
-axis(2,at=seq(0,1,0.2),seq(0,100,20),cex.axis=0.8)
-mtext('Percentile for LSP (%)',2,line=2.5,cex=0.8)
-text(0,0.9,2013)
+## EOS
+if(clt==6){
+  for(i in 1:12){
+    if(i<=6){
+      load(paste('landsat_c6_2013_eos_',scene[i],'.RData',sep=''))  
+    }else{
+      load(paste('landsat_c6_2012_eos_',scene[i-6],'.RData',sep=''))  
+    }
+    lphe[[i]] <- lanbymod
+    mphe[[i]] <- mmphe
+    vphe[[i]] <- vvphe
+    npix[[i]] <- nlpix  
+  }
+}else{
+  for(i in 1:12){
+    if(i<=6){
+      load(paste('landsat_c5_2013_eos_',scene[i],'.RData',sep=''))  
+    }else{
+      load(paste('landsat_c5_2012_eos_',scene[i-6],'.RData',sep=''))  
+    }
+    lphe[[i]] <- lanbymod
+    mphe[[i]] <- mmphe
+    vphe[[i]] <- vvphe
+    npix[[i]] <- nlpix  
+  }  
+}
+plot_vio('EOS')
 
-plot(0:1,0:1,xlim=c(0,14.5),ylim=c(0,1),type='n',axes=F,ann=F)
-mvio(mq[[6]],vq[[6]],mq[[7]],vq[[7]],mq[[8]],vq[[8]],
-     mq[[9]],vq[[9]],mq[[10]],vq[[10]],
-     at=c(1,2,4,5,7,8,10,11,13,14),col=rep(mycol,each=2),add=T)
-axis(1,at=c(1,2,4,5,7,8,10,11,13,14),
-     c('M.Ha','V.Ha','M.Ba','V.Ba','M.Ca','V.Ca','M.Hu','V.Hu','M.Pr','V.Pr'),
-     cex.axis=0.8)
-axis(2,at=seq(0,1,0.2),seq(0,100,20),cex.axis=0.8)
-mtext('Percentile for LSP (%)',2,line=2.5,cex=0.8)
-text(0,0.9,2012)
+dev.off()
