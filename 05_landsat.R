@@ -255,24 +255,34 @@ if(ss==6){
 # Get MODIS boundaries
 modpix <- unique(modcor[,c('pix_x','pix_y')])
 nsam <- 1000
-sam <- sample(1:nrow(modpix),nsam)
 # Extract LSPs for each MODIS pixel
 lanbymod <- matrix(NA,nsam,250*9)
+nlpix <- matrix(NA,nsam,1)
 for(i in 1:nsam){
-  r1 <- which(modcor[,3]==(modpix[sam[i],1]-1) & modcor[,4]==(modpix[sam[i],2]-1))
-  r2 <- which(modcor[,3]==(modpix[sam[i],1]-1) & modcor[,4]==(modpix[sam[i],2]-0))
-  r3 <- which(modcor[,3]==(modpix[sam[i],1]-1) & modcor[,4]==(modpix[sam[i],2]+1))
-  r4 <- which(modcor[,3]==(modpix[sam[i],1]-0) & modcor[,4]==(modpix[sam[i],2]-1))
-  r5 <- which(modcor[,3]==(modpix[sam[i],1]-0) & modcor[,4]==(modpix[sam[i],2]-0))
-  r6 <- which(modcor[,3]==(modpix[sam[i],1]-0) & modcor[,4]==(modpix[sam[i],2]+1))
-  r7 <- which(modcor[,3]==(modpix[sam[i],1]+1) & modcor[,4]==(modpix[sam[i],2]-1))
-  r8 <- which(modcor[,3]==(modpix[sam[i],1]+1) & modcor[,4]==(modpix[sam[i],2]-0))
-  r9 <- which(modcor[,3]==(modpix[sam[i],1]+1) & modcor[,4]==(modpix[sam[i],2]+1))
-  rr <- c(r1,r2,r3,r4,r5,r6,r7,r8,r9)
+  
+  temp <- rep(0)
+  while(sum(!is.na(temp))<500){
     
-  lanbymod[i,1:(length(rr))] <- pheno_mat[rr,tt] 
+    sam <- sample(1:nrow(modpix),1) 
+    
+    r1 <- which(modcor[,3]==(modpix[sam,1]-1) & modcor[,4]==(modpix[sam,2]-1))
+    r2 <- which(modcor[,3]==(modpix[sam,1]-1) & modcor[,4]==(modpix[sam,2]-0))
+    r3 <- which(modcor[,3]==(modpix[sam,1]-1) & modcor[,4]==(modpix[sam,2]+1))
+    r4 <- which(modcor[,3]==(modpix[sam,1]-0) & modcor[,4]==(modpix[sam,2]-1))
+    r5 <- which(modcor[,3]==(modpix[sam,1]-0) & modcor[,4]==(modpix[sam,2]-0))
+    r6 <- which(modcor[,3]==(modpix[sam,1]-0) & modcor[,4]==(modpix[sam,2]+1))
+    r7 <- which(modcor[,3]==(modpix[sam,1]+1) & modcor[,4]==(modpix[sam,2]-1))
+    r8 <- which(modcor[,3]==(modpix[sam,1]+1) & modcor[,4]==(modpix[sam,2]-0))
+    r9 <- which(modcor[,3]==(modpix[sam,1]+1) & modcor[,4]==(modpix[sam,2]+1))
+    rr <- c(r1,r2,r3,r4,r5,r6,r7,r8,r9)
+    
+    temp <- pheno_mat[rr,tt] 
+    temp[temp==0] <- NA
+  }
+  
+  nlpix[i] <- sum(!is.na(temp))
+  lanbymod[i,1:(length(rr))] <- temp
 }
-lanbymod[lanbymod==0] <- NA
 
 # Get Mid-Greenup and smoothing by 3 by 3 window
 if(tt==41){
@@ -361,12 +371,12 @@ for(i in 1:nsam){
 
 setwd('/projectnb/modislc/users/mkmoon/VIIRS/R_data/')
 if(tt==41){
-  save(mmphe,vvphe,lanbymod,quant,file=paste('landsat_c6_2013_sos_',scene,'.RData',sep=''))
+  save(mmphe,vvphe,lanbymod,quant,nlpix,file=paste('landsat_c6_2013_sos_',scene,'.RData',sep=''))
 }else if(tt==40){
-  save(mmphe,vvphe,lanbymod,quant,file=paste('landsat_c6_2012_sos_',scene,'.RData',sep=''))
+  save(mmphe,vvphe,lanbymod,quant,nlpix,file=paste('landsat_c6_2012_sos_',scene,'.RData',sep=''))
 }else if(tt==73){
-  save(mmphe,vvphe,lanbymod,quant,file=paste('landsat_c6_2013_eos_',scene,'.RData',sep=''))
+  save(mmphe,vvphe,lanbymod,quant,nlpix,file=paste('landsat_c6_2013_eos_',scene,'.RData',sep=''))
 }else{
-  save(mmphe,vvphe,lanbymod,quant,file=paste('landsat_c6_2012_eos_',scene,'.RData',sep=''))
+  save(mmphe,vvphe,lanbymod,quant,nlpix,file=paste('landsat_c6_2012_eos_',scene,'.RData',sep=''))
 }
 
