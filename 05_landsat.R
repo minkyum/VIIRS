@@ -4,6 +4,13 @@ library(sp)
 library(raster)
 library(gdalUtils)
 
+# From bash code
+args <- commandArgs()
+print(args)
+
+## Select collection (6 for C6 and 5 for C5)
+clt <- as.numeric(substr(args[3],1,1))
+
 ## Get dates
 ### 1. Load land cover type (MCD12Q1) 
 ext1204 <- raster('/projectnb/modislc/users/mkmoon/VIIRS/NLCD_crosswalked_IGBP/nlcd_igbp_500m/h12v04.bsq')
@@ -77,28 +84,49 @@ for(yy in 2012:2014){
   }
 }
 # C6
+num_days <- c(366,rep(365,13))
+sub_days <- cumsum(num_days)
+
 for(yy in 2012:2014){
   phe <- c('Greenup','Maturity','Senescence','Dormancy')  
   rast <- vector('list',length(phe))
-  for(vari in 1:4){
-    path <- paste('/projectnb/modislc/users/dsm/eval_modis_lc_061917/MCD12I6/',phe[vari],'/',phe[vari],'_',tile,'_',yy,sep='')
-    ncol <- 2400
-    nrow <- 2400
-    nbands <- 2
-    cnt <- ncol*nrow*nbands
-    data <- readBin(path,what="integer",n=cnt,size=2,endian="little")
-    data[data>30000] <- NA
-    data1 <- data - as.numeric(as.Date(paste(yy-1,'-12-31',sep='')))
-    data2 <- array(data1,c(nbands, ncol, nrow))
-    data2 <- aperm(data2, c(3,2,1)) #for transposing
-    aa <- brick(data2,
-                xmn=ext1204@extent@xmin,
-                xmx=ext1204@extent@xmax,
-                ymn=ext1204@extent@ymin,
-                ymx=ext1204@extent@ymax,
-                crs=ext1204@crs)
-    rast[[vari]] <- aa[[1]]  
+  
+  if(clt==6){
+    # C6
+    for(vari in 1:4){
+      path <- paste('/projectnb/modislc/users/dsm/eval_modis_lc_061917/MCD12I6/',phe[vari],'/',phe[vari],'_',tile,'_',yy,sep='')
+      ncol <- 2400
+      nrow <- 2400
+      nbands <- 2
+      cnt <- ncol*nrow*nbands
+      data <- readBin(path,what="integer",n=cnt,size=2,endian="little")
+      data[data>30000] <- NA
+      data1 <- data - as.numeric(as.Date(paste(yy-1,'-12-31',sep='')))
+      data2 <- array(data1,c(nbands, ncol, nrow))
+      data2 <- aperm(data2, c(3,2,1)) #for transposing
+      aa <- brick(data2,
+                  xmn=ext1204@extent@xmin,
+                  xmx=ext1204@extent@xmax,
+                  ymn=ext1204@extent@ymin,
+                  ymx=ext1204@extent@ymax,
+                  crs=ext1204@crs)
+      rast[[vari]] <- aa[[1]]  
+    }  
+  }else{
+    # C5
+    for(vari in 1:4){
+      path <- paste('/projectnb/modislc/data/mcd12_out/phen_out/c5_hdf1/',yy,'/001/',phe[vari],sep='')
+      aa <- raster(paste(path,'/Phe',substr(phe[vari],1,3),'.A',yy,'001.h12v04.hdf',sep=''),
+                   xmn=ext1204@extent@xmin,
+                   xmx=ext1204@extent@xmax,
+                   ymn=ext1204@extent@ymin,
+                   ymx=ext1204@extent@ymax)
+      aa[abs(aa)>30000] <- NA
+      aa <- aa - sub_days[yy-2000]
+      rast[[vari]] <- aa  
+    }
   }
+  
   if(yy==2012){
     mm120412 <- rast
   }else if(yy==2013){
@@ -159,34 +187,61 @@ for(tt in 1:2){
   
   phe <- c('Greenup','Maturity','Senescence','Dormancy')  
   rast <- vector('list',length(phe))
-  for(vari in 1:4){
-    path <- paste('/projectnb/modislc/users/dsm/eval_modis_lc_061917/MCD12I6/',phe[vari],'/',phe[vari],'_',tile[tt],'_',year,sep='')
-    ncol <- 2400
-    nrow <- 2400
-    nbands <- 2
-    cnt <- ncol*nrow*nbands
-    data <- readBin(path,what="integer",n=cnt,size=2,endian="little")
-    data[data>30000] <- NA
-    data1 <- data - as.numeric(as.Date(paste(year-1,'-12-31',sep='')))
-    data2 <- array(data1,c(nbands, ncol, nrow))
-    data2 <- aperm(data2, c(3,2,1)) #for transposing
-    if(tt==1){
-      aa <- brick(data2,
-                  xmn=ext0805@extent@xmin,
-                  xmx=ext0805@extent@xmax,
-                  ymn=ext0805@extent@ymin,
-                  ymx=ext0805@extent@ymax,
-                  crs=ext1204@crs)  
-    }else{
-      aa <- brick(data2,
-                  xmn=ext1104@extent@xmin,
-                  xmx=ext1104@extent@xmax,
-                  ymn=ext1104@extent@ymin,
-                  ymx=ext1104@extent@ymax,
-                  crs=ext1204@crs)
-    }
-    rast[[vari]] <- aa[[1]]  
+  
+  if(clt==6){
+    # C6
+    for(vari in 1:4){
+      path <- paste('/projectnb/modislc/users/dsm/eval_modis_lc_061917/MCD12I6/',phe[vari],'/',phe[vari],'_',tile[tt],'_',year,sep='')
+      ncol <- 2400
+      nrow <- 2400
+      nbands <- 2
+      cnt <- ncol*nrow*nbands
+      data <- readBin(path,what="integer",n=cnt,size=2,endian="little")
+      data[data>30000] <- NA
+      data1 <- data - as.numeric(as.Date(paste(year-1,'-12-31',sep='')))
+      data2 <- array(data1,c(nbands, ncol, nrow))
+      data2 <- aperm(data2, c(3,2,1)) #for transposing
+      if(tt==1){
+        aa <- brick(data2,
+                    xmn=ext0805@extent@xmin,
+                    xmx=ext0805@extent@xmax,
+                    ymn=ext0805@extent@ymin,
+                    ymx=ext0805@extent@ymax,
+                    crs=ext1204@crs)  
+      }else{
+        aa <- brick(data2,
+                    xmn=ext1104@extent@xmin,
+                    xmx=ext1104@extent@xmax,
+                    ymn=ext1104@extent@ymin,
+                    ymx=ext1104@extent@ymax,
+                    crs=ext1204@crs)
+      }
+      rast[[vari]] <- aa[[1]]  
+    }  
+  }else{
+    # C5
+    for(vari in 1:4){
+      path <- paste('/projectnb/modislc/data/mcd12_out/phen_out/c5_hdf1/',yy,'/001/',phe[vari],sep='')
+      
+      if(tt==1){
+        aa <- raster(paste(path,'/Phe',substr(phe[vari],1,3),'.A',yy,'001.h12v04.hdf',sep=''),
+                     xmn=ext0805@extent@xmin,
+                     xmx=ext0805@extent@xmax,
+                     ymn=ext0805@extent@ymin,
+                     ymx=ext0805@extent@ymax)
+      }else{
+        aa <- raster(paste(path,'/Phe',substr(phe[vari],1,3),'.A',yy,'001.h12v04.hdf',sep=''),
+                     xmn=ext1104@extent@xmin,
+                     xmx=ext1104@extent@xmax,
+                     ymn=ext1104@extent@ymin,
+                     ymx=ext1104@extent@ymax)
+      }
+      aa[abs(aa)>30000] <- NA
+      aa <- aa - sub_days[yy-2000]
+      rast[[vari]] <- aa   
+    }  
   }
+  
   if(tt==1){
     mm0805 <- rast  
   }else{
@@ -196,26 +251,17 @@ for(tt in 1:2){
 
 
 ### Landsat Phenology
-args <- commandArgs()
-print(args)
-
-ss <- as.numeric(substr(args[3],1,1))
-tt <- as.numeric(substr(args[3],2,3))
+ss <- as.numeric(substr(args[3],2,2))
+tt <- as.numeric(substr(args[3],3,4))
 
 scene <- c('mwp_harvard','ah_bartlett','mwp_cary','ah_hubbard','mwp_proctor','mws_boundary_waters')
 scene <- scene[ss]
 load(paste('/projectnb/modislc/projects/te_phenology/landsat_stacks/',scene,'/phenology/pheno_nodist_mat',sep=''))  
-lan_phe <- pheno_mat
-
-# Extent for Landsat Scenes
-setwd(paste('/projectnb/modislc/projects/te_phenology/landsat_stacks/',scene,'/NLCD',sep=''))  
-nlcd_scene <- raster('nlcd_clip.bip')       
-nlcd_scene_vals <- getValues(nlcd_scene)
-tmp_vals <- matrix(NA,ncell(nlcd_scene),1)
-tmp_vals[lan_phe[,1],1] <- lan_phe[,tt]
-lan_phe_sp <- setValues(nlcd_scene,tmp_vals)
-tmp_vals[lan_phe[,1],1] <- lan_phe[,73]
-lan_phe_au <- setValues(nlcd_scene,tmp_vals)
+## Note (pheno_mat)
+# column 41 is 2013 SOS
+# column 40 is 2012 SOS
+# column 73 is 2013 EOS
+# column 72 is 2012 EOS
 
 # Get MODIS location
 get_mod_xy <- function(in_coords) {
@@ -257,9 +303,10 @@ modpix <- unique(modcor[,c('pix_x','pix_y')])
 nsam <- 1000
 # Extract LSPs for each MODIS pixel
 lanbymod <- matrix(NA,nsam,250*9)
-nlpix <- matrix(NA,nsam,1)
+nlpix <- matrix(NA,nsam,2)
 for(i in 1:nsam){
   
+  # Sample has more than 500 Landsat pixels for each panel (i.e. 3 by 3 MODIS pixels)
   temp <- rep(0)
   while(sum(!is.na(temp))<500){
     
@@ -280,12 +327,13 @@ for(i in 1:nsam){
     temp[temp==0] <- NA
   }
   
-  nlpix[i] <- sum(!is.na(temp))
+  nlpix[i,1] <- sum(!is.na(temp)) # Number of Landsat pixel
+  nlpix[i,2] <- sam
   lanbymod[i,1:(length(rr))] <- temp
 }
 
 # Get Mid-Greenup and smoothing by 3 by 3 window
-if(tt==41){
+if(tt==41){ # 2013 SOS
   if(ss==6){
     mmmid <- (mm1104[[2]]+mm1104[[1]])/2
     mmmid <- focal(mmmid,w=matrix(1,3,3),mean,na.rm=F)
@@ -301,7 +349,7 @@ if(tt==41){
     vvmid <- focal(vvmid[[1]],w=matrix(1,3,3),mean,na.rm=F)
     vvmid <- getValues(vvmid[[1]])  
   }  
-}else if(tt==40){
+}else if(tt==40){ # 2012 SOS
   if(ss==6){
     mmmid <- (mm1104[[2]]+mm1104[[1]])/2
     mmmid <- focal(mmmid,w=matrix(1,3,3),mean,na.rm=F)
@@ -317,7 +365,7 @@ if(tt==41){
     vvmid <- focal(vvmid[[1]],w=matrix(1,3,3),mean,na.rm=F)
     vvmid <- getValues(vvmid[[1]])  
   } 
-}else if(tt==73){
+}else if(tt==73){ # 2013 EOS
   if(ss==6){
     mmmid <- (mm1104[[4]]+mm1104[[3]])/2
     mmmid <- focal(mmmid,w=matrix(1,3,3),mean,na.rm=F)
@@ -333,7 +381,7 @@ if(tt==41){
     vvmid <- focal(vvmid[[1]],w=matrix(1,3,3),mean,na.rm=F)
     vvmid <- getValues(vvmid[[1]])  
   }
-}else{
+}else{ # 2012 EOS
   if(ss==6){
     mmmid <- (mm1104[[4]]+mm1104[[3]])/2
     mmmid <- focal(mmmid,w=matrix(1,3,3),mean,na.rm=F)
@@ -351,32 +399,22 @@ if(tt==41){
   } 
 }
 
+# Convert MODIS pixel (x,y) coordinate to number
 pixnum <- modpix[sam,1]+2400*(modpix[sam,2]-1)
-
+# Pheno-metrics as vectors
 mmphe <- round(mmmid[pixnum])
 vvphe <- round(vvmid[pixnum])
 
-quant <- matrix(NA,nsam,2)
-for(i in 1:nsam){
-  if(sum(!is.na(lanbymod[i,]))<1000){
-    quant[i,1] <- NA
-    quant[i,2] <- NA
-  }else{
-    temp <- ecdf(lanbymod[i,])
-    
-    quant[i,1] <- temp(mmphe[i])
-    quant[i,2] <- temp(vvphe[i])  
-  }
-}
 
-setwd('/projectnb/modislc/users/mkmoon/VIIRS/R_data/')
+## Save data
+setwd('/projectnb/modislc/users/mkmoon/VIIRS/R_data/landsat/')
 if(tt==41){
-  save(mmphe,vvphe,lanbymod,quant,nlpix,file=paste('landsat_c6_2013_sos_',scene,'.RData',sep=''))
+  save(mmphe,vvphe,lanbymod,quant,nlpix,file=paste('landsat_c',clt,'_2013_sos_',scene,'.RData',sep=''))
 }else if(tt==40){
-  save(mmphe,vvphe,lanbymod,quant,nlpix,file=paste('landsat_c6_2012_sos_',scene,'.RData',sep=''))
+  save(mmphe,vvphe,lanbymod,quant,nlpix,file=paste('landsat_c',clt,'_2012_sos_',scene,'.RData',sep=''))
 }else if(tt==73){
-  save(mmphe,vvphe,lanbymod,quant,nlpix,file=paste('landsat_c6_2013_eos_',scene,'.RData',sep=''))
+  save(mmphe,vvphe,lanbymod,quant,nlpix,file=paste('landsat_c',clt,'_2013_eos_',scene,'.RData',sep=''))
 }else{
-  save(mmphe,vvphe,lanbymod,quant,nlpix,file=paste('landsat_c6_2012_eos_',scene,'.RData',sep=''))
+  save(mmphe,vvphe,lanbymod,quant,nlpix,file=paste('landsat_c',clt,'_2012_eos_',scene,'.RData',sep=''))
 }
 
