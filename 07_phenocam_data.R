@@ -1,30 +1,49 @@
-# if(!require(devtools)){install.package(devtools)}
-# devtools::install_github("khufkens/daymetr")
-# devtools::install_github("khufkens/phenocamr")
-# devtools::install_github("khufkens/phenor")
-
 # Site location
 setwd('/projectnb/modislc/users/mkmoon/NEphenology/phenocam/')
 sites <- read.csv('site_modistile.csv')
 
-sam <- as.matrix(sites[,c('h_tile','v_tile','line','samp')])
+site.1204 <- subset(sites,h_tile==12&v_tile==4)
+site.1104 <- subset(sites,h_tile==11&v_tile==4)
+site.0805 <- subset(sites,h_tile==8&v_tile==5)
 
-sam.1204 <- sam[which(sam[,1]==12 & sam[,2]==4),]
-sam.1104 <- sam[which(sam[,1]==11 & sam[,2]==4),]
-sam.0805 <- sam[which(sam[,1]==8 & sam[,2]==5),]
+path <- '/projectnb/modislc/users/mkmoon/NEphenology/phenocam/data/'
+search_str <- paste('*DB*transi*.csv',sep='')
+files <- list.files(path=path,pattern=glob2rx(search_str),full.names=F,include.dirs=F)
 
-site.1204 <- as.character(sites[which(sam[,1]==12 & sam[,2]==4),2])
-site.1104 <- as.character(sites[which(sam[,1]==11 & sam[,2]==4),2])
-site.0805 <- as.character(sites[which(sam[,1]==08 & sam[,2]==5),2])
+site.name <- sub('_DB_.*','',files)
 
-
-## Download data
-setwd('/projectnb/modislc/users/mkmoon/NEphenology/phenocam/data')
-for(i in 1:length(site.1204)){
-  download_phenocam(site = site.1204[i],
-                    frequency = 3,
-                    phenophase = TRUE)  
+sitecord <- matrix(NA,length(site.name),4)
+rownames(sitecord) <- site.name
+cor <- as.matrix(sites[,3:6])
+for(i in 1:length(site.name)){
+  for(j in 1:nrow(cor)){
+    if(sites$sites[j]==site.name[i]) sitecord[i,] <- cor[j,]  
+  }
 }
 
+datesos <- matrix(NA,length(site.name),20)
+dateeos <- matrix(NA,length(site.name),20)
+colnames(datesos) <- 2001:2020
+colnames(dateeos) <- 2001:2020
 
+for(ss in 1:length(site.name)){
+  setwd('/projectnb/modislc/users/mkmoon/NEphenology/phenocam/data/')
+  dat <- read.csv(files[ss],skip=16,header=T)
+  dat1 <- subset(dat,direction=='rising'&gcc_value=='gcc_90',)
+  dat2 <- subset(dat,direction=='falling'&gcc_value=='gcc_90',)
+  
+  sos <- dat1$transition_50
+  for(i in 1:length(sos)){
+    yy <- as.numeric(substr(sos[i],1,4))
+    cc <- yy-2000
+    datesos[ss,cc] <- (sos[i])
+  }
+  
+  eos <- dat2$transition_50
+  for(i in 1:length(eos)){
+    yy <- as.numeric(substr(eos[i],1,4))
+    cc <- yy-2000
+    dateeos[ss,cc] <- (eos[i])
+  }
+}
 
