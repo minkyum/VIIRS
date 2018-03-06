@@ -330,8 +330,8 @@ phe.plot <- function(rast1,rast2,tile,year,vari){
        main=NULL,cex.axis=1,xlab="VIIRS - MODIS (Day)",ylab="Density",cex.lab=1)
 }
 
-setwd('/projectnb/modislc/users/mkmoon/VIIRS/figures/')
-pdf(file=paste('VIvsC6_diag.pdf',sep=''),width=15,height=7)
+# setwd('/projectnb/modislc/users/mkmoon/VIIRS/figures/')
+# pdf(file=paste('VIvsC6_diag.pdf',sep=''),width=15,height=7)
 
 for(i in 1:4){
   phe.plot(vv120412[[i]][[1]],mm120412[[i]][[1]],"H12V04",2012,phe[i])
@@ -353,12 +353,6 @@ for(i in 1:4){
 dev.off()
 
 
-
-
-
- 
-# 
-# 
 # #filter
 # values(vv120412[[1]][[1]])[values(vv120412[[1]][[1]])<2] <- NA
 # values(mm120412[[1]][[1]])[values(mm120412[[1]][[1]])<2] <- NA
@@ -438,67 +432,72 @@ dev.off()
 # values(mm1104[[4]][[1]])[values(mm1104[[4]][[1]])<150] <- NA
 # 
 # 
-# ## Summary stats
-# lctp1204 <- lct1204/(sum(lct1204[2:17]))*100
-# lctp1104 <- lct1104/(sum(lct1104[2:17]))*100
-# lctp0805 <- lct0805/(sum(lct0805[2:17]))*100
-# 
-# barplot(lctp1204) # 5 and 4 (Mixed and Deciduous forests)
-# barplot(lctp1104) # 12 and 14 (Croplands and Cropland/natural VM)
-# barplot(lctp0805) # 7 and 10 (Open shrublands and Grasslands)
-# 
-# lct1204[c(5+1,4+1)]
-# lct1104[c(12+1,14+1)]
-# lct0805[c(7+1,10+1)]
-# 
-# lctp1204[c(5+1,4+1)]
-# lctp1104[c(12+1,14+1)]
-# lctp0805[c(7+1,10+1)]
-# 
-# mean(vv120413[[1]][[1]][lct1204==5],narm=T)
-# mean(vv120413[[2]][[1]][lct1204==5],narm=T)
-# mean(vv120413[[3]][[1]][lct1204==5],narm=T)
-# mean(vv120413[[4]][[1]][lct1204==5],narm=T)
-# mean(mm120413[[1]][[1]][lct.1204==5],na.rm=T)
-# mean(mm.1204.13[[2]][[1]][lct.1204==5],na.rm=T)
-# mean(mm.1204.13[[3]][[1]][lct.1204==5],na.rm=T)
-# mean(mm.1204.13[[4]][[1]][lct.1204==5],na.rm=T)
-# 
-# sd(vv.1204.13[[1]][[1]][lct.1204==5],na.rm=T)
-# sd(vv.1204.13[[2]][[1]][lct.1204==5],na.rm=T)
-# sd(vv.1204.13[[3]][[1]][lct.1204==5],na.rm=T)
-# sd(vv.1204.13[[4]][[1]][lct.1204==5],na.rm=T)
-# sd(mm.1204.13[[1]][[1]][lct.1204==5],na.rm=T)
-# sd(mm.1204.13[[2]][[1]][lct.1204==5],na.rm=T)
-# sd(mm.1204.13[[3]][[1]][lct.1204==5],na.rm=T)
-# sd(mm.1204.13[[4]][[1]][lct.1204==5],na.rm=T)
-# 
-# 
-# 
-# 
-# sum(getValues(vv.1204.13[[1]][[1]])==1,na.rm=T)
-# sum(getValues(vv.1204.13[[2]][[1]])==1,na.rm=T)
-# sum(getValues(vv.1204.13[[3]][[1]])==1,na.rm=T)
-# sum(getValues(vv.1204.13[[4]][[1]])[lct1204==5]==1,na.rm=T)
-# sum(getValues(mm.1204.13[[1]][[1]])[lct1204==5]==1,na.rm=T)
-# sum(getValues(mm.1204.13[[2]][[1]])[lct1204==5]==1,na.rm=T)
-# sum(getValues(mm.1204.13[[3]][[1]])[lct1204==5]==1,na.rm=T)
-# sum(getValues(mm.1204.13[[4]][[1]])[lct1204==5]==1,na.rm=T)
-# 
-# sum(getValues(vv.1104[[1]][[1]])==1,na.rm=T)
-# sum(getValues(vv.1104[[2]][[1]])==1,na.rm=T)
-# sum(getValues(vv.1104[[3]][[1]])==1,na.rm=T)
-# sum(getValues(vv.1104[[4]][[1]])==1,na.rm=T)
-# sum(getValues(mm.1104[[1]][[1]])==1,na.rm=T)
-# sum(getValues(mm.1104[[2]][[1]])==1,na.rm=T)
-# sum(getValues(mm.1104[[3]][[1]])==1,na.rm=T)
-# sum(getValues(mm.1104[[4]][[1]])==1,na.rm=T)
-# 
-# sum(getValues(vv.0805[[1]][[1]])==1,na.rm=T)
-# sum(getValues(vv.0805[[2]][[1]])==1,na.rm=T)
-# sum(getValues(vv.0805[[3]][[1]])==1,na.rm=T)
-# sum(getValues(vv.0805[[4]][[1]])==1,na.rm=T)
-# sum(getValues(mm.0805[[1]][[1]])==1,na.rm=T)
-# sum(getValues(mm.0805[[2]][[1]])==1,na.rm=T)
-# sum(getValues(mm.0805[[3]][[1]])==1,na.rm=T)
-# sum(getValues(mm.0805[[4]][[1]])==1,na.rm=T)
+## Summary stats
+lctp1204 <- lct1204/(sum(lct1204[2:17]))*100
+lctp1104 <- lct1104/(sum(lct1104[2:17]))*100
+lctp0805 <- lct0805/(sum(lct0805[2:17]))*100
+
+barplot(lctp1204) # 5 and 4 (Mixed and Deciduous forests)
+barplot(lctp1104) # 12 and 14 (Croplands and Cropland/natural VM)
+barplot(lctp0805) # 7 and 10 (Open shrublands and Grasslands)
+
+lct1204[c(5+1,4+1)]
+lct1104[c(12+1,14+1)]
+lct0805[c(7+1,10+1)]
+
+lctp1204[c(5+1,4+1,14+1)]
+lctp1104[c(12+1,14+1,5+1)]
+lctp0805[c(7+1,10+1,8+1)]
+
+sum(lctp1204[c(5+1,4+1,14+1)])
+sum(lctp1104[c(12+1,14+1,5+1)])
+sum(lctp0805[c(7+1,10+1,8+1)])
+
+
+mean(vv120413[[1]][[1]][lct.1204==5],na.rm=T)
+mean(vv120413[[2]][[1]][lct.1204==5],na.rm=T)
+mean(vv120413[[3]][[1]][lct.1204==5],na.rm=T)
+mean(vv120413[[4]][[1]][lct.1204==5],na.rm=T)
+mean(mm120413[[1]][[1]][lct.1204==5],na.rm=T)
+mean(mm120413[[2]][[1]][lct.1204==5],na.rm=T)
+mean(mm120413[[3]][[1]][lct.1204==5],na.rm=T)
+mean(mm120413[[4]][[1]][lct.1204==5],na.rm=T)
+
+sd(vv.1204.13[[1]][[1]][lct.1204==5],na.rm=T)
+sd(vv.1204.13[[2]][[1]][lct.1204==5],na.rm=T)
+sd(vv.1204.13[[3]][[1]][lct.1204==5],na.rm=T)
+sd(vv.1204.13[[4]][[1]][lct.1204==5],na.rm=T)
+sd(mm.1204.13[[1]][[1]][lct.1204==5],na.rm=T)
+sd(mm.1204.13[[2]][[1]][lct.1204==5],na.rm=T)
+sd(mm.1204.13[[3]][[1]][lct.1204==5],na.rm=T)
+sd(mm.1204.13[[4]][[1]][lct.1204==5],na.rm=T)
+
+
+
+
+sum(getValues(vv.1204.13[[1]][[1]])==1,na.rm=T)
+sum(getValues(vv.1204.13[[2]][[1]])==1,na.rm=T)
+sum(getValues(vv.1204.13[[3]][[1]])==1,na.rm=T)
+sum(getValues(vv.1204.13[[4]][[1]])[lct1204==5]==1,na.rm=T)
+sum(getValues(mm.1204.13[[1]][[1]])[lct1204==5]==1,na.rm=T)
+sum(getValues(mm.1204.13[[2]][[1]])[lct1204==5]==1,na.rm=T)
+sum(getValues(mm.1204.13[[3]][[1]])[lct1204==5]==1,na.rm=T)
+sum(getValues(mm.1204.13[[4]][[1]])[lct1204==5]==1,na.rm=T)
+
+sum(getValues(vv.1104[[1]][[1]])==1,na.rm=T)
+sum(getValues(vv.1104[[2]][[1]])==1,na.rm=T)
+sum(getValues(vv.1104[[3]][[1]])==1,na.rm=T)
+sum(getValues(vv.1104[[4]][[1]])==1,na.rm=T)
+sum(getValues(mm.1104[[1]][[1]])==1,na.rm=T)
+sum(getValues(mm.1104[[2]][[1]])==1,na.rm=T)
+sum(getValues(mm.1104[[3]][[1]])==1,na.rm=T)
+sum(getValues(mm.1104[[4]][[1]])==1,na.rm=T)
+
+sum(getValues(vv.0805[[1]][[1]])==1,na.rm=T)
+sum(getValues(vv.0805[[2]][[1]])==1,na.rm=T)
+sum(getValues(vv.0805[[3]][[1]])==1,na.rm=T)
+sum(getValues(vv.0805[[4]][[1]])==1,na.rm=T)
+sum(getValues(mm.0805[[1]][[1]])==1,na.rm=T)
+sum(getValues(mm.0805[[2]][[1]])==1,na.rm=T)
+sum(getValues(mm.0805[[3]][[1]])==1,na.rm=T)
+sum(getValues(mm.0805[[4]][[1]])==1,na.rm=T)
