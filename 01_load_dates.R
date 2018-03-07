@@ -218,148 +218,148 @@ for(tt in 1:2){
 }
 
 
-### 3. Overview via raster and histgram
-phe.plot <- function(rast1,rast2,tile,year,vari){
-   
-  values(lct.1204)[values(lct.1204!=0)] <- NA
-  values(lct.1104)[values(lct.1104!=0)] <- NA
-  values(lct.0805)[values(lct.0805!=0)] <- NA
-  
-  if(as.numeric(substr(tile,2,3))==12){
-    wm <- lct.1204 
-    lp <- 2400*2400 - sum(values(wm)==0,na.rm=T)
-    yylim=c(0,0.035)
-  }else if(as.numeric(substr(tile,2,3))==11){
-    wm <- lct.1104 
-    lp <- 2400*2400 - sum(values(wm)==0,na.rm=T)
-    yylim=c(0,0.035)
-  }else{
-    wm <- lct.0805 
-    lp <- 2400*2400 - sum(values(wm)==0,na.rm=T)
-    yylim=c(0,0.022)
-  }
-  
-  # Raster plots
-  bb <- rast1
-  
-  upp <- round(quantile(bb,0.98,na.rm=T))
-  lwp <- round(quantile(bb,0.02,na.rm=T))
-  leg.int <- round(seq(lwp,upp,length.out = 5))  
-  values(bb)[values(bb)>=upp] <- upp
-  values(bb)[values(bb)<=lwp] <- lwp
-  values(bb)[values(wm)==0] <- 32727
-  
-  bp <- c(seq(lwp,upp),32727)
-  mycol <- brewer.pal(11,'Spectral')
-  mycol <- rev(colorRampPalette(mycol)(upp-lwp))
-  
-  par(fig=c(0,0.333,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5)) 
-  plot(bb,box=F,bty = "n",xaxt = "n", yaxt = "n",breaks=bp,
-       col=c(mycol,'grey45'),colNA='grey75',legend=F,main=paste("VIIRS_",tile,"_",year,"_",vari,sep=""))
-#   par(fig=c(0,0.333,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.8,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)
-#   plot(wm,add=T,col='grey45',legend=F)
-  par(fig=c(0,0.333,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)
-  plot(bb,legend.only=T,col=mycol,zlim=c(lwp,upp),
-       legend.width=1.5,legend.shrink=0.6,
-       smallplot=c(0.83,0.86,0.2,0.8),
-       axis.args=list(at=leg.int,cex.axis=1,font=1,
-                      labels=c(paste('<',lwp,sep=''),leg.int[2:4],paste('>',upp,sep='')))) 
-  
-  bb <- rast2
-  values(bb)[values(bb)>=upp] <- upp
-  values(bb)[values(bb)<=lwp] <- lwp
-  values(bb)[values(wm)==0] <- 32727
-  
-  par(fig=c(0.333,0.666,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)  
-  plot(bb,box=F,bty = "n",xaxt = "n", yaxt = "n",breaks=bp,
-       col=c(mycol,'grey45'),colNA='grey75',legend=F,main=paste("MODIS_",tile,"_",year,"_",vari,sep=""))
+# ### 3. Overview via raster and histgram
+# phe.plot <- function(rast1,rast2,tile,year,vari){
+#    
+#   values(lct.1204)[values(lct.1204!=0)] <- NA
+#   values(lct.1104)[values(lct.1104!=0)] <- NA
+#   values(lct.0805)[values(lct.0805!=0)] <- NA
+#   
+#   if(as.numeric(substr(tile,2,3))==12){
+#     wm <- lct.1204 
+#     lp <- 2400*2400 - sum(values(wm)==0,na.rm=T)
+#     yylim=c(0,0.035)
+#   }else if(as.numeric(substr(tile,2,3))==11){
+#     wm <- lct.1104 
+#     lp <- 2400*2400 - sum(values(wm)==0,na.rm=T)
+#     yylim=c(0,0.035)
+#   }else{
+#     wm <- lct.0805 
+#     lp <- 2400*2400 - sum(values(wm)==0,na.rm=T)
+#     yylim=c(0,0.022)
+#   }
+#   
+#   # Raster plots
+#   bb <- rast1
+#   
+#   upp <- round(quantile(bb,0.98,na.rm=T))
+#   lwp <- round(quantile(bb,0.02,na.rm=T))
+#   leg.int <- round(seq(lwp,upp,length.out = 5))  
+#   values(bb)[values(bb)>=upp] <- upp
+#   values(bb)[values(bb)<=lwp] <- lwp
+#   values(bb)[values(wm)==0] <- 32727
+#   
+#   bp <- c(seq(lwp,upp),32727)
+#   mycol <- brewer.pal(11,'Spectral')
+#   mycol <- rev(colorRampPalette(mycol)(upp-lwp))
+#   
+#   par(fig=c(0,0.333,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5)) 
+#   plot(bb,box=F,bty = "n",xaxt = "n", yaxt = "n",breaks=bp,
+#        col=c(mycol,'grey45'),colNA='grey75',legend=F,main=paste("VIIRS_",tile,"_",year,"_",vari,sep=""))
+# #   par(fig=c(0,0.333,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.8,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)
+# #   plot(wm,add=T,col='grey45',legend=F)
+#   par(fig=c(0,0.333,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)
+#   plot(bb,legend.only=T,col=mycol,zlim=c(lwp,upp),
+#        legend.width=1.5,legend.shrink=0.6,
+#        smallplot=c(0.83,0.86,0.2,0.8),
+#        axis.args=list(at=leg.int,cex.axis=1,font=1,
+#                       labels=c(paste('<',lwp,sep=''),leg.int[2:4],paste('>',upp,sep='')))) 
+#   
+#   bb <- rast2
+#   values(bb)[values(bb)>=upp] <- upp
+#   values(bb)[values(bb)<=lwp] <- lwp
+#   values(bb)[values(wm)==0] <- 32727
+#   
+#   par(fig=c(0.333,0.666,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)  
+#   plot(bb,box=F,bty = "n",xaxt = "n", yaxt = "n",breaks=bp,
+#        col=c(mycol,'grey45'),colNA='grey75',legend=F,main=paste("MODIS_",tile,"_",year,"_",vari,sep=""))
+# #   par(fig=c(0.333,0.666,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)
+# #   plot(wm,add=T,col='grey45',legend=F)
 #   par(fig=c(0.333,0.666,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)
-#   plot(wm,add=T,col='grey45',legend=F)
-  par(fig=c(0.333,0.666,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)
-  plot(bb,legend.only=T,col=mycol,zlim=c(lwp,upp),
-       legend.width=1.5,legend.shrink=0.6,
-       smallplot=c(0.83,0.86,0.2,0.8),
-       axis.args=list(at=leg.int,cex.axis=1,font=1,
-                      labels=c(paste('<',lwp,sep=''),leg.int[2:4],paste('>',upp,sep='')))) 
-  
-  # Histograms
-  dd1 <- getValues(rast1)
-  dd2 <- getValues(rast2)
-  
-  par(fig=c(0,0.333,0,0.5),mgp=c(2.5,1.5,0),oma=c(1,1,1,1),mar=c(4,4,2,4),new=T) 
-  hist(dd1,xlim=c(-100,450),ylim=yylim,
-       breaks = seq(-400,700,1),probability=T,lty="blank",col=rgb(1,0,0,0.5),
-       main=NULL,cex.axis=1,xlab="Day of year",ylab="Density",cex.lab=1)
-  hist(dd2,xlim=c(-100,450),breaks = seq(-400,700,1),probability=T,lty="blank",col=rgb(0,0,1,0.5),
-       main=NULL,cex.axis=1,xlab="Day of year",ylab="Density",cex.lab=1,add=T)
-  legend("topright",c("VIIRS","MODIS"),pch=22,pt.bg=c(rgb(1,0,0,0.5),rgb(0,0,1,0.5)),cex=1,bty="n")  
-  
-  pp1 <- 1 - sum(!is.na(dd1))/lp
-  pp2 <- 1 - sum(!is.na(dd2))/lp
-  
-  par(fig=c(0.333,0.666,0,0.5),mgp=c(2.5,1.5,0),oma=c(1,1,1,1),mar=c(4,4,2,4),new=T) 
-  barplot(c(pp1,pp2),ylim=c(0,1),name=c("VIIRS","MODIS"),ylab="NA fraction (land only)")
-  text(0.7,pp1,round(pp1,3),pos=3)
-  text(1.9,pp2,round(pp2,3),pos=3)
-  
-  # Difference
-  dd1 <- focal(rast1,w=matrix(1,3,3),mean,na.rm=T)
-  dd2 <- focal(rast2,w=matrix(1,3,3),mean,na.rm=T)
-  
-  bb <- dd1-dd2
-  upp <- 30
-  lwp <- -30
-  leg.int <- round(seq(lwp,upp,length.out = 5))  
-  values(bb)[values(bb)>=upp] <- upp
-  values(bb)[values(bb)<=lwp] <- lwp
-  values(bb)[values(wm)==0] <- 32727
-    
-  bp <- c(seq(lwp,upp),32727)
-  mycol <- brewer.pal(11,'RdBu')
-  mycol <- rev(colorRampPalette(mycol)(upp-lwp))
-
-  par(fig=c(0.666,1,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)  
-  plot(bb,box=F,bty = "n",xaxt = "n", yaxt = "n",breaks=bp,
-       col=c(mycol,'grey45'),colNA='grey75',legend=F,main=paste("VI-MO_",tile,"_",year,"_",vari,sep=""))
+#   plot(bb,legend.only=T,col=mycol,zlim=c(lwp,upp),
+#        legend.width=1.5,legend.shrink=0.6,
+#        smallplot=c(0.83,0.86,0.2,0.8),
+#        axis.args=list(at=leg.int,cex.axis=1,font=1,
+#                       labels=c(paste('<',lwp,sep=''),leg.int[2:4],paste('>',upp,sep='')))) 
+#   
+#   # Histograms
+#   dd1 <- getValues(rast1)
+#   dd2 <- getValues(rast2)
+#   
+#   par(fig=c(0,0.333,0,0.5),mgp=c(2.5,1.5,0),oma=c(1,1,1,1),mar=c(4,4,2,4),new=T) 
+#   hist(dd1,xlim=c(-100,450),ylim=yylim,
+#        breaks = seq(-400,700,1),probability=T,lty="blank",col=rgb(1,0,0,0.5),
+#        main=NULL,cex.axis=1,xlab="Day of year",ylab="Density",cex.lab=1)
+#   hist(dd2,xlim=c(-100,450),breaks = seq(-400,700,1),probability=T,lty="blank",col=rgb(0,0,1,0.5),
+#        main=NULL,cex.axis=1,xlab="Day of year",ylab="Density",cex.lab=1,add=T)
+#   legend("topright",c("VIIRS","MODIS"),pch=22,pt.bg=c(rgb(1,0,0,0.5),rgb(0,0,1,0.5)),cex=1,bty="n")  
+#   
+#   pp1 <- 1 - sum(!is.na(dd1))/lp
+#   pp2 <- 1 - sum(!is.na(dd2))/lp
+#   
+#   par(fig=c(0.333,0.666,0,0.5),mgp=c(2.5,1.5,0),oma=c(1,1,1,1),mar=c(4,4,2,4),new=T) 
+#   barplot(c(pp1,pp2),ylim=c(0,1),name=c("VIIRS","MODIS"),ylab="NA fraction (land only)")
+#   text(0.7,pp1,round(pp1,3),pos=3)
+#   text(1.9,pp2,round(pp2,3),pos=3)
+#   
+#   # Difference
+#   dd1 <- focal(rast1,w=matrix(1,3,3),mean,na.rm=T)
+#   dd2 <- focal(rast2,w=matrix(1,3,3),mean,na.rm=T)
+#   
+#   bb <- dd1-dd2
+#   upp <- 30
+#   lwp <- -30
+#   leg.int <- round(seq(lwp,upp,length.out = 5))  
+#   values(bb)[values(bb)>=upp] <- upp
+#   values(bb)[values(bb)<=lwp] <- lwp
+#   values(bb)[values(wm)==0] <- 32727
+#     
+#   bp <- c(seq(lwp,upp),32727)
+#   mycol <- brewer.pal(11,'RdBu')
+#   mycol <- rev(colorRampPalette(mycol)(upp-lwp))
+# 
+#   par(fig=c(0.666,1,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)  
+#   plot(bb,box=F,bty = "n",xaxt = "n", yaxt = "n",breaks=bp,
+#        col=c(mycol,'grey45'),colNA='grey75',legend=F,main=paste("VI-MO_",tile,"_",year,"_",vari,sep=""))
+# #   par(fig=c(0.666,1,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)
+# #   plot(wm,add=T,col='grey45',legend=F)
 #   par(fig=c(0.666,1,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)
-#   plot(wm,add=T,col='grey45',legend=F)
-  par(fig=c(0.666,1,0.5,1),mgp=c(1.5,0.5,0),oma=c(0.5,0.5,0.5,0.5),mar=c(0.5,0.5,0.8,0.5),new=T)
-  plot(bb,legend.only=T,col=mycol,zlim=c(lwp,upp),
-       legend.width=1.5,legend.shrink=0.6,
-       smallplot=c(0.83,0.86,0.2,0.8),
-       axis.args=list(at=leg.int,cex.axis=1,font=1,
-                      labels=c(paste('<',lwp,sep=''),leg.int[2:4],paste('>',upp,sep='')))) 
-
-  # Histograms
-  dd <- getValues((dd1-dd2))
-  
-  par(fig=c(0.666,1,0,0.5),mgp=c(2.5,1.5,0),oma=c(1,1,1,1),mar=c(4,4,2,4),new=T) 
-  hist(dd,xlim=c(-100,100),
-       breaks = seq(-700,700,1),probability=T,
-       main=NULL,cex.axis=1,xlab="VIIRS - MODIS (Day)",ylab="Density",cex.lab=1)
-}
-
-# setwd('/projectnb/modislc/users/mkmoon/VIIRS/figures/')
-# pdf(file=paste('VIvsC6_diag.pdf',sep=''),width=15,height=7)
-
-for(i in 1:4){
-  phe.plot(vv120412[[i]][[1]],mm120412[[i]][[1]],"H12V04",2012,phe[i])
-}
-for(i in 1:4){
-  phe.plot(vv120413[[i]][[1]],mm120413[[i]][[1]],"H12V04",2013,phe[i])
-}
-for(i in 1:4){
-  phe.plot(vv120414[[i]][[1]],mm120414[[i]][[1]],"H12V04",2014,phe[i])
-}
-
-for(i in 1:4){
-  phe.plot(vv1104[[i]][[1]],mm1104[[i]][[1]],"H11V04",2013,phe[i])
-}
-for(i in 1:4){
-  phe.plot(vv0805[[i]][[1]],mm0805[[i]][[1]],"H08V05",2013,phe[i])
-}
-
-dev.off()
+#   plot(bb,legend.only=T,col=mycol,zlim=c(lwp,upp),
+#        legend.width=1.5,legend.shrink=0.6,
+#        smallplot=c(0.83,0.86,0.2,0.8),
+#        axis.args=list(at=leg.int,cex.axis=1,font=1,
+#                       labels=c(paste('<',lwp,sep=''),leg.int[2:4],paste('>',upp,sep='')))) 
+# 
+#   # Histograms
+#   dd <- getValues((dd1-dd2))
+#   
+#   par(fig=c(0.666,1,0,0.5),mgp=c(2.5,1.5,0),oma=c(1,1,1,1),mar=c(4,4,2,4),new=T) 
+#   hist(dd,xlim=c(-100,100),
+#        breaks = seq(-700,700,1),probability=T,
+#        main=NULL,cex.axis=1,xlab="VIIRS - MODIS (Day)",ylab="Density",cex.lab=1)
+# }
+# 
+# # setwd('/projectnb/modislc/users/mkmoon/VIIRS/figures/')
+# # pdf(file=paste('VIvsC6_diag.pdf',sep=''),width=15,height=7)
+# 
+# for(i in 1:4){
+#   phe.plot(vv120412[[i]][[1]],mm120412[[i]][[1]],"H12V04",2012,phe[i])
+# }
+# for(i in 1:4){
+#   phe.plot(vv120413[[i]][[1]],mm120413[[i]][[1]],"H12V04",2013,phe[i])
+# }
+# for(i in 1:4){
+#   phe.plot(vv120414[[i]][[1]],mm120414[[i]][[1]],"H12V04",2014,phe[i])
+# }
+# 
+# for(i in 1:4){
+#   phe.plot(vv1104[[i]][[1]],mm1104[[i]][[1]],"H11V04",2013,phe[i])
+# }
+# for(i in 1:4){
+#   phe.plot(vv0805[[i]][[1]],mm0805[[i]][[1]],"H08V05",2013,phe[i])
+# }
+# 
+# dev.off()
 
 
 # #filter
@@ -467,19 +467,24 @@ mean(vv120413[[1]][[1]][lct.1204==5],na.rm=T)
 mean(vv120413[[2]][[1]][lct.1204==5],na.rm=T)
 mean(vv120413[[3]][[1]][lct.1204==5],na.rm=T)
 mean(vv120413[[4]][[1]][lct.1204==5],na.rm=T)
+mean(vv120413[[5]][[1]][lct.1204==5],na.rm=T)
+mean(vv120413[[6]][[1]][lct.1204==5],na.rm=T)
+
 mean(mm120413[[1]][[1]][lct.1204==5],na.rm=T)
 mean(mm120413[[2]][[1]][lct.1204==5],na.rm=T)
 mean(mm120413[[3]][[1]][lct.1204==5],na.rm=T)
 mean(mm120413[[4]][[1]][lct.1204==5],na.rm=T)
+mean(mm120413[[5]][[1]][lct.1204==5],na.rm=T)
+mean(mm120413[[6]][[1]][lct.1204==5],na.rm=T)
 
-sd(vv.1204.13[[1]][[1]][lct.1204==5],na.rm=T)
-sd(vv.1204.13[[2]][[1]][lct.1204==5],na.rm=T)
-sd(vv.1204.13[[3]][[1]][lct.1204==5],na.rm=T)
-sd(vv.1204.13[[4]][[1]][lct.1204==5],na.rm=T)
-sd(mm.1204.13[[1]][[1]][lct.1204==5],na.rm=T)
-sd(mm.1204.13[[2]][[1]][lct.1204==5],na.rm=T)
-sd(mm.1204.13[[3]][[1]][lct.1204==5],na.rm=T)
-sd(mm.1204.13[[4]][[1]][lct.1204==5],na.rm=T)
+sd(vv120413[[1]][[1]][lct.1204==5],na.rm=T)
+sd(vv120413[[2]][[1]][lct.1204==5],na.rm=T)
+sd(vv120413[[3]][[1]][lct.1204==5],na.rm=T)
+sd(vv120413[[4]][[1]][lct.1204==5],na.rm=T)
+sd(mm120413[[1]][[1]][lct.1204==5],na.rm=T)
+sd(mm120413[[2]][[1]][lct.1204==5],na.rm=T)
+sd(mm120413[[3]][[1]][lct.1204==5],na.rm=T)
+sd(mm120413[[4]][[1]][lct.1204==5],na.rm=T)
 
 
 
