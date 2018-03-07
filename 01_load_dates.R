@@ -61,7 +61,12 @@ tile <- 'h12v04'
 # VIIRS 
 for(yy in 2012:2014){
   
-  phe <- c('Increase','Maximum','Decrease','Minimum')
+  if(yy==2012){
+    phe <- c('Increase','Maximum','Decrease','Minimum')  
+  }else{
+    phe <- c('Increase','Maximum','Decrease','Minimum','Mid_Greenup','Mid_Senescence')  
+  }
+  
   phe_viirs <- vector('list',length(phe))
   str <- paste('H12V04_phenology_EVI2_',yy,'_04132017_Onset_Greenness_',sep='')
   rast <- vector('list',length(phe))
@@ -92,7 +97,11 @@ for(yy in 2012:2014){
 }
 # C6
 for(yy in 2012:2014){
-  phe <- c('Greenup','Maturity','Senescence','Dormancy')  
+  if(yy==2012){
+    phe <- c('Greenup','Maturity','Senescence','Dormancy')  
+  }else{
+    phe <- c('Greenup','Maturity','Senescence','Dormancy','MidGreenup','MidGreendown')    
+  }
   rast <- vector('list',length(phe))
   for(vari in 1:4){
     path <- paste('/projectnb/modislc/users/dsm/eval_modis_lc_061917/MCD12I6/',phe[vari],'/',phe[vari],'_',tile,'_',yy,sep='')
@@ -128,7 +137,7 @@ for(tt in 1:2){
   year <- 2013
   tile <- c('h08v05','h11v04')
   viirs_path <- paste('/projectnb/modislc/users/mkmoon/VIIRS/tiles/',tile[tt],'/Dates_VIIRS/',sep='')
-  phe <- c('gri','gre','sei','see')
+  phe <- c('gri','gre','sei','see','giMD','seMD')
   phe_viirs <- vector('list',length(phe))
   
   if(tt==1){
@@ -171,7 +180,7 @@ for(tt in 1:2){
   year <- 2013
   tile <- c('h08v05','h11v04')
 
-  phe <- c('Greenup','Maturity','Senescence','Dormancy')  
+  phe <- c('Greenup','Maturity','Senescence','Dormancy','MidGreenup','MidGreendown')  
   rast <- vector('list',length(phe))
   for(vari in 1:4){
     path <- paste('/projectnb/modislc/users/dsm/eval_modis_lc_061917/MCD12I6/',phe[vari],'/',phe[vari],'_',tile[tt],'_',year,sep='')
