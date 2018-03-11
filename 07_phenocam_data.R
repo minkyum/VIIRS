@@ -38,56 +38,74 @@ sitecord2 <- subset(sitecord,X3==11&X4==4)
 sitecord3 <- subset(sitecord,X3==8&X4==5)
 sitecord <- rbind(sitecord1,sitecord2,sitecord3)
 
-# Extract 3 day transition data
+# Extract 3 day transition data file list
 search_str <- '*3day_transi*.csv'
 files <- list.files(path=path,pattern=glob2rx(search_str),full.names=F,include.dirs=F)
+sitefull <- sub('_3day.*','',files)
 sites <- sub('_.*','',files)
+
+# ROI vegetation type
+vgt <- rep(0)
+for(i in 1:length(sites)){
+  vgt[i] <- sub(sites[i],'',files[i])
+  vgt[i] <- substr(vgt[i],2,3)  
+}
 
 ## Match site name and coordinate
 cor <- as.matrix(sitecord[,2:7])
 cord <- matrix(NA,length(sites),6)
+diag <- rep(0)
 for(i in 1:length(sites)){
   for(j in 1:nrow(sitecord)){
     if(sitecord$site.name[j]==sites[i]) cord[i,] <- cor[j,]  
   }
 }
-sitecord <- data.frame(sites,cord)
+sitecord <- data.frame(sitefull,vgt,cord)
 sitecord <- na.omit(sitecord)
-colnames(sitecord) <- c('site','lat','lon','htile','vtile','x','y')
+colnames(sitecord) <- c('site','vegtype','lat','lon','htile','vtile','x','y')
+
+## Extract 3 day transition data files
+files <- rep(0)
+for(i in 1:nrow(sitecord)){
+  search_str <- paste(sitecord$site[i],'_3day_*nsition_dates.csv',sep='')
+  files[i] <- list.files(path=path,pattern=glob2rx(search_str),full.names=F,include.dirs=F)
+}
+sitecord <- data.frame(files,sitecord)
+colnames(sitecord) <- c('file','site','vegtype','lat','lon','htile','vtile','x','y')
 
 ## Extract 50% SOS and EOS dates
 datesos <- matrix(NA,nrow(sitecord),16)
 dateeos <- matrix(NA,nrow(sitecord),16)
-colnames(datesos) <- 2001:2020
-colnames(dateeos) <- 2001:2020
 
 for(ss in 1:nrow(sitecord)){
-  setwd('/projectnb/modislc/users/mkmoon/NEphenology/phenocam/data/')
   dat <- read.csv(files[ss],skip=16,header=T)
-  dat1 <- subset(dat,direction=='rising'&gcc_value=='gcc_90',)
-  dat2 <- subset(dat,direction=='falling'&gcc_value=='gcc_90',)
+  dat1 <- subset(dat,direction=='rising'&gcc_value=='gcc_90')
+  dat2 <- subset(dat,direction=='falling'&gcc_value=='gcc_90')
   
   sos <- dat1$transition_50
   for(i in 1:length(sos)){
     yy <- as.numeric(substr(sos[i],1,4))
-    cc <- yy-2000
+    cc <- yy-1999
     datesos[ss,cc] <- as.Date(sos[i])
   }
   
   eos <- dat2$transition_50
   for(i in 1:length(eos)){
     yy <- as.numeric(substr(eos[i],1,4))
-    cc <- yy-2000
+    cc <- yy-1999
     dateeos[ss,cc] <- as.Date(eos[i])
   }
 }
 
 ## Merge coordinate and dates
-phenosos <- cbind(sitecord,datesos)
-phenoeos <- cbind(sitecord,dateeos)
-
-phenosos <- subset(phenosos,vg.type=='AG'|vg.type=='DB'|vg.type=='DN'|vg.type=='EN'|vg.type=='GR'|vg.type=='SH')
-phenoeos <- subset(phenoeos,vg.type=='AG'|vg.type=='DB'|vg.type=='DN'|vg.type=='EN'|vg.type=='GR'|vg.type=='SH')
+sos <- as.Date(datesos,origin='1970-1-1')
+sos <- matrix(as.numeric(strftime(sos,format='%j')),nrow(sitecord),16)
+colnames(sos) <- 2000:2015
+phenosos <- cbind(sitecord,sos)
+eos <- as.Date(dateeos,origin='1970-1-1')
+eos <- matrix(as.numeric(strftime(eos,format='%j')),nrow(sitecord),16)
+colnames(eos) <- 2000:2015
+phenoeos <- cbind(sitecord,eos)
 
 ### MODIS data near Phenocam sites
 get_lsp_sos <- function(sensor,year){
@@ -96,17 +114,17 @@ get_lsp_sos <- function(sensor,year){
   for(i in 1:nrow(phenosos)){
     if(year==2013){
       if(sensor=='mm'){
-        if(phenosos[i,3]==12){
+        if(phenosos$htile[i]==12){
           rast <- (mm120413[[1]]+mm120413[[2]])/2
-        }else if(phenosos[i,3]==11){
+        }else if(phenosos$htile[i]==11){
           rast <- (mm1104[[1]]+mm1104[[2]])/2
         }else{
           rast <- (mm0805[[1]]+mm0805[[2]])/2
         }
       }else{
-        if(phenosos[i,3]==12){
+        if(phenosos$htile[i]==12){
           rast <- (vv120413[[1]][[1]]+vv120413[[2]][[1]])/2
-        }else if(phenosos[i,3]==11){
+        }else if(phenosos$htile[i]==11){
           rast <- (vv1104[[1]][[1]]+vv1104[[2]][[1]])/2
         }else{
           rast <- (vv0805[[1]][[1]]+vv0805[[2]][[1]])/2
@@ -114,13 +132,13 @@ get_lsp_sos <- function(sensor,year){
       }  
     }else if(year==2012){
       if(sensor=='mm'){
-        if(phenosos[i,3]==12){
+        if(phenosos$htile[i]==12){
           rast <- (mm120412[[1]]+mm120412[[2]])/2
         }else{
           rast <- NA
         }
       }else{
-        if(phenosos[i,3]==12){
+        if(phenosos$htile[i]==12){
           rast <- (vv120412[[1]][[1]]+vv120412[[2]][[1]])/2
         }else{
           rast <- NA
@@ -128,13 +146,13 @@ get_lsp_sos <- function(sensor,year){
       }
     }else{
       if(sensor=='mm'){
-        if(phenosos[i,3]==12){
+        if(phenosos$htile[i]==12){
           rast <- (mm120414[[1]]+mm120414[[2]])/2
         }else{
           rast <- NA
         }
       }else{
-        if(phenosos[i,3]==12){
+        if(phenosos$htile[i]==12){
           rast <- (vv120414[[1]][[1]]+vv120414[[2]][[1]])/2
         }else{
           rast <- NA
@@ -143,60 +161,60 @@ get_lsp_sos <- function(sensor,year){
     }
     
     if(year==2013){
-      phe[i,1] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])-2]
-      phe[i,2] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])-1]
-      phe[i,3] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])]
-      phe[i,4] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])+1]
-      phe[i,5] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])+2]
-      phe[i,6] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])-2]
-      phe[i,7] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])-1]
-      phe[i,8] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])]
-      phe[i,9] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])+1]
-      phe[i,10] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])+2]
-      phe[i,11] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])-2]
-      phe[i,12] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])-1]
-      phe[i,13] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])]
-      phe[i,14] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])+1]
-      phe[i,15] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])+2]
-      phe[i,16] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])-2]
-      phe[i,17] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])-1]
-      phe[i,18] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])]
-      phe[i,19] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])+1]
-      phe[i,20] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])+2]
-      phe[i,21] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])-2]
-      phe[i,22] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])-1]
-      phe[i,23] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])]
-      phe[i,24] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])+1]
-      phe[i,25] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])+2]
+      phe[i,1] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])-2]
+      phe[i,2] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])-1]
+      phe[i,3] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])]
+      phe[i,4] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])+1]
+      phe[i,5] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])+2]
+      phe[i,6] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])-2]
+      phe[i,7] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])-1]
+      phe[i,8] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])]
+      phe[i,9] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])+1]
+      phe[i,10] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])+2]
+      phe[i,11] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])-2]
+      phe[i,12] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])-1]
+      phe[i,13] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])]
+      phe[i,14] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])+1]
+      phe[i,15] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])+2]
+      phe[i,16] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])-2]
+      phe[i,17] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])-1]
+      phe[i,18] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])]
+      phe[i,19] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])+1]
+      phe[i,20] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])+2]
+      phe[i,21] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])-2]
+      phe[i,22] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])-1]
+      phe[i,23] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])]
+      phe[i,24] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])+1]
+      phe[i,25] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])+2]
     }else{
-      if(phenosos[i,3]==11|phenosos[i,3]==8){
+      if(phenosos$htile[i]==11|phenosos$htile[i]==8){
         phe[i,] <- NA
       }else{
-        phe[i,1] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])-2]
-        phe[i,2] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])-1]
-        phe[i,3] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])]
-        phe[i,4] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])+1]
-        phe[i,5] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])+2]
-        phe[i,6] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])-2]
-        phe[i,7] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])-1]
-        phe[i,8] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])]
-        phe[i,9] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])+1]
-        phe[i,10] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])+2]
-        phe[i,11] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])-2]
-        phe[i,12] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])-1]
-        phe[i,13] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])]
-        phe[i,14] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])+1]
-        phe[i,15] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])+2]
-        phe[i,16] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])-2]
-        phe[i,17] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])-1]
-        phe[i,18] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])]
-        phe[i,19] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])+1]
-        phe[i,20] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])+2]
-        phe[i,21] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])-2]
-        phe[i,22] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])-1]
-        phe[i,23] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])]
-        phe[i,24] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])+1]
-        phe[i,25] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])+2]
+        phe[i,1] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])-2]
+        phe[i,2] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])-1]
+        phe[i,3] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])]
+        phe[i,4] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])+1]
+        phe[i,5] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])+2]
+        phe[i,6] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])-2]
+        phe[i,7] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])-1]
+        phe[i,8] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])]
+        phe[i,9] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])+1]
+        phe[i,10] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])+2]
+        phe[i,11] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])-2]
+        phe[i,12] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])-1]
+        phe[i,13] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])]
+        phe[i,14] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])+1]
+        phe[i,15] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])+2]
+        phe[i,16] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])-2]
+        phe[i,17] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])-1]
+        phe[i,18] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])]
+        phe[i,19] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])+1]
+        phe[i,20] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])+2]
+        phe[i,21] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])-2]
+        phe[i,22] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])-1]
+        phe[i,23] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])]
+        phe[i,24] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])+1]
+        phe[i,25] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])+2]
       }
     }
   }
@@ -208,17 +226,17 @@ get_lsp_eos <- function(sensor,year){
   for(i in 1:nrow(phenosos)){
     if(year==2013){
       if(sensor=='mm'){
-        if(phenosos[i,3]==12){
+        if(phenosos$htile[i]==12){
           rast <- (mm120413[[3]]+mm120413[[4]])/2
-        }else if(phenosos[i,3]==11){
+        }else if(phenosos$htile[i]==11){
           rast <- (mm1104[[3]]+mm1104[[4]])/2
         }else{
           rast <- (mm0805[[3]]+mm0805[[4]])/2
         }
       }else{
-        if(phenosos[i,3]==12){
+        if(phenosos$htile[i]==12){
           rast <- (vv120413[[3]][[1]]+vv120413[[4]][[1]])/2
-        }else if(phenosos[i,3]==11){
+        }else if(phenosos$htile[i]==11){
           rast <- (vv1104[[3]][[1]]+vv1104[[4]][[1]])/2
         }else{
           rast <- (vv0805[[3]][[1]]+vv0805[[4]][[1]])/2
@@ -226,13 +244,13 @@ get_lsp_eos <- function(sensor,year){
       }  
     }else if(year==2012){
       if(sensor=='mm'){
-        if(phenosos[i,3]==12){
+        if(phenosos$htile[i]==12){
           rast <- (mm120412[[3]]+mm120412[[4]])/2
         }else{
           rast <- NA
         }
       }else{
-        if(phenosos[i,3]==12){
+        if(phenosos$htile[i]==12){
           rast <- (vv120412[[3]][[1]]+vv120412[[4]][[1]])/2
         }else{
           rast <- NA
@@ -240,13 +258,13 @@ get_lsp_eos <- function(sensor,year){
       }
     }else{
       if(sensor=='mm'){
-        if(phenosos[i,3]==12){
+        if(phenosos$htile[i]==12){
           rast <- (mm120414[[3]]+mm120414[[4]])/2
         }else{
           rast <- NA
         }
       }else{
-        if(phenosos[i,3]==12){
+        if(phenosos$htile[i]==12){
           rast <- (vv120414[[3]][[1]]+vv120414[[4]][[1]])/2
         }else{
           rast <- NA
@@ -255,60 +273,60 @@ get_lsp_eos <- function(sensor,year){
     }
     
     if(year==2013){
-      phe[i,1] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])-2]
-      phe[i,2] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])-1]
-      phe[i,3] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])]
-      phe[i,4] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])+1]
-      phe[i,5] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])+2]
-      phe[i,6] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])-2]
-      phe[i,7] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])-1]
-      phe[i,8] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])]
-      phe[i,9] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])+1]
-      phe[i,10] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])+2]
-      phe[i,11] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])-2]
-      phe[i,12] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])-1]
-      phe[i,13] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])]
-      phe[i,14] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])+1]
-      phe[i,15] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])+2]
-      phe[i,16] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])-2]
-      phe[i,17] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])-1]
-      phe[i,18] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])]
-      phe[i,19] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])+1]
-      phe[i,20] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])+2]
-      phe[i,21] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])-2]
-      phe[i,22] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])-1]
-      phe[i,23] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])]
-      phe[i,24] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])+1]
-      phe[i,25] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])+2]
+      phe[i,1] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])-2]
+      phe[i,2] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])-1]
+      phe[i,3] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])]
+      phe[i,4] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])+1]
+      phe[i,5] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])+2]
+      phe[i,6] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])-2]
+      phe[i,7] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])-1]
+      phe[i,8] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])]
+      phe[i,9] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])+1]
+      phe[i,10] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])+2]
+      phe[i,11] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])-2]
+      phe[i,12] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])-1]
+      phe[i,13] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])]
+      phe[i,14] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])+1]
+      phe[i,15] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])+2]
+      phe[i,16] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])-2]
+      phe[i,17] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])-1]
+      phe[i,18] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])]
+      phe[i,19] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])+1]
+      phe[i,20] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])+2]
+      phe[i,21] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])-2]
+      phe[i,22] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])-1]
+      phe[i,23] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])]
+      phe[i,24] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])+1]
+      phe[i,25] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])+2]
     }else{
-      if(phenosos[i,3]==11|phenosos[i,3]==8){
+      if(phenosos$htile[i]==11|phenosos$htile[i]==8){
         phe[i,] <- NA
       }else{
-        phe[i,1] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])-2]
-        phe[i,2] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])-1]
-        phe[i,3] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])]
-        phe[i,4] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])+1]
-        phe[i,5] <- rast[round(phenosos[i,5])-2,round(phenosos[i,6])+2]
-        phe[i,6] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])-2]
-        phe[i,7] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])-1]
-        phe[i,8] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])]
-        phe[i,9] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])+1]
-        phe[i,10] <- rast[round(phenosos[i,5])-1,round(phenosos[i,6])+2]
-        phe[i,11] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])-2]
-        phe[i,12] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])-1]
-        phe[i,13] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])]
-        phe[i,14] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])+1]
-        phe[i,15] <- rast[round(phenosos[i,5])+0,round(phenosos[i,6])+2]
-        phe[i,16] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])-2]
-        phe[i,17] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])-1]
-        phe[i,18] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])]
-        phe[i,19] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])+1]
-        phe[i,20] <- rast[round(phenosos[i,5])+1,round(phenosos[i,6])+2]
-        phe[i,21] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])-2]
-        phe[i,22] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])-1]
-        phe[i,23] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])]
-        phe[i,24] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])+1]
-        phe[i,25] <- rast[round(phenosos[i,5])+2,round(phenosos[i,6])+2]
+        phe[i,1] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])-2]
+        phe[i,2] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])-1]
+        phe[i,3] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])]
+        phe[i,4] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])+1]
+        phe[i,5] <- rast[round(phenosos$x[i])-2,round(phenosos$y[i])+2]
+        phe[i,6] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])-2]
+        phe[i,7] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])-1]
+        phe[i,8] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])]
+        phe[i,9] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])+1]
+        phe[i,10] <- rast[round(phenosos$x[i])-1,round(phenosos$y[i])+2]
+        phe[i,11] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])-2]
+        phe[i,12] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])-1]
+        phe[i,13] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])]
+        phe[i,14] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])+1]
+        phe[i,15] <- rast[round(phenosos$x[i])+0,round(phenosos$y[i])+2]
+        phe[i,16] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])-2]
+        phe[i,17] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])-1]
+        phe[i,18] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])]
+        phe[i,19] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])+1]
+        phe[i,20] <- rast[round(phenosos$x[i])+1,round(phenosos$y[i])+2]
+        phe[i,21] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])-2]
+        phe[i,22] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])-1]
+        phe[i,23] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])]
+        phe[i,24] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])+1]
+        phe[i,25] <- rast[round(phenosos$x[i])+2,round(phenosos$y[i])+2]
       }
     }
   }
@@ -360,23 +378,15 @@ eosmm13s <- apply(phemm13e,1,sd)
 eosvv14s <- apply(phevv14e,1,sd)
 eosmm14s <- apply(phemm14e,1,sd)
 
-
 # Get Phenocam transtision dates
 ## SOS
-sospc12 <- as.Date(phenosos[,18],origin='1970-1-1')
-sospc12 <- as.numeric(strftime(sospc12,format='%j'))
-sospc13 <- as.Date(phenosos[,19],origin='1970-1-1')
-sospc13 <- as.numeric(strftime(sospc13,format='%j'))
-sospc14 <- as.Date(phenosos[,20],origin='1970-1-1')
-sospc14 <- as.numeric(strftime(sospc14,format='%j'))
+sospc12 <- phenosos$'2012'
+sospc13 <- phenosos$'2013'
+sospc14 <- phenosos$'2014'
 ## EOS
-eospc12 <- as.Date(phenoeos[,18],origin='1970-1-1')
-eospc12 <- as.numeric(strftime(eospc12,format='%j'))
-eospc13 <- as.Date(phenoeos[,19],origin='1970-1-1')
-eospc13 <- as.numeric(strftime(eospc13,format='%j'))
-eospc14 <- as.Date(phenoeos[,20],origin='1970-1-1')
-eospc14 <- as.numeric(strftime(eospc14,format='%j'))
-
+eospc12 <- phenoeos$'2012'
+eospc13 <- phenoeos$'2013'
+eospc14 <- phenoeos$'2014'
 
 ### Plot
 plot_phenocam <- function(sensor){
@@ -451,15 +461,86 @@ plot_phenocam('mm')
 
 # dev.off()
 
+par(mfrow=c(2,2),oma=c(1,1,1,1),mar=c(4,4,4,4),mgp=c(2.5,1,0))
 
-xx <- c(sosvv12,sosvv13,sosvv14,eosvv12,eosvv13,eosvv14)
-yy <- c(sospc12,sospc13,sospc14,eospc12,eospc13,eospc14)
+vgt <- rep(phenosos$vegtype,3)
+year <- c(rep(2012,nrow(phenosos)),rep(2013,nrow(phenosos)),rep(2014,nrow(phenosos)))
+xx1 <- c(sosvv12,sosvv13,sosvv14)
+xx2 <- c(sosmm12,sosmm13,sosmm14)
+yy <- c(sospc12,sospc13,sospc14)
+dat <- data.frame(xx1,xx2,yy,vgt,year)
+dat <- na.omit(dat)
+dat <- subset(dat,vgt=='DB')
+temp <- na.omit(dat$yy-dat$xx1)
+rmse <- round(sqrt(mean((temp)^2)),1)
+temp <- na.omit(dat$yy-dat$xx2)
+rmse <- round(sqrt(mean((temp)^2)),1)
 
-xx <- c(sosmm12,sosmm13,sosmm14,eosmm12,eosmm13,eosmm14)
-yy <- c(sospc12,sospc13,sospc14,eospc12,eospc13,eospc14)
+plot(dat[,1],dat[,3],xlim=c(100,180),ylim=c(100,180),pch=19,
+     xlab='VIIRS SOS',ylab='Phenocam SOS')
+legend('topleft',c('DB','EN'),pch=c(19,1))
+abline(lm(dat[,3]~dat[,1]))
+summary(lm(dat[,3]~dat[,1]))
+dat <- data.frame(xx1,xx2,yy,vgt,year)
+dat <- na.omit(dat)
+dat <- subset(dat,vgt=='EN')
+points(dat[,1],dat[,3])
+abline(0,1,lty=5)
+abline(lm(dat[,3]~dat[,1]))
+summary(lm(dat[,3]~dat[,1]))
 
-xx <- c(sosvv12,sosvv13,sosvv14,eosvv12,eosvv13,eosvv14)
-yy <- c(sospc12,sospc13,sospc14,eospc12,eospc13,eospc14)
+dat <- data.frame(xx1,xx2,yy,vgt)
+dat <- na.omit(dat)
+dat <- subset(dat,vgt=='DB')
+plot(dat[,2],dat[,3],xlim=c(100,180),ylim=c(100,180),pch=19,
+     xlab='MODIS SOS',ylab='Phenocam SOS')
+legend('topleft',c('DB','EN'),pch=c(19,1))
+abline(lm(dat[,3]~dat[,2]))
+summary(lm(dat[,3]~dat[,2]))
+dat <- data.frame(xx1,xx2,yy,vgt)
+dat <- na.omit(dat)
+dat <- subset(dat,vgt=='EN')
+points(dat[,2],dat[,3])
+abline(0,1,lty=5)
+abline(lm(dat[,3]~dat[,2]))
+summary(lm(dat[,3]~dat[,2]))
 
-xx <- c(sosmm12,sosmm13,sosmm14,eosmm12,eosmm13,eosmm14)
-yy <- c(sospc12,sospc13,sospc14,eospc12,eospc13,eospc14)
+xx1 <- c(eosvv12,eosvv13,eosvv14)
+xx2 <- c(eosmm12,eosmm13,eosmm14)
+yy <- c(eospc12,eospc13,eospc14)
+dat <- data.frame(xx1,xx2,yy,vgt,year)
+dat <- na.omit(dat)
+dat <- subset(dat,vgt=='DB')
+temp <- na.omit(dat$yy-dat$xx1)
+rmse <- round(sqrt(mean((temp)^2)),1)
+temp <- na.omit(dat$yy-dat$xx2)
+rmse <- round(sqrt(mean((temp)^2)),1)
+
+plot(dat[,1],dat[,3],xlim=c(210,350),ylim=c(210,350),pch=19,
+     xlab='VIIRS EOS',ylab='Phenocam EOS')
+legend('topleft',c('DB','EN'),pch=c(19,1))
+abline(lm(dat[,3]~dat[,1]))
+summary(lm(dat[,3]~dat[,1]))
+dat <- data.frame(xx1,xx2,yy,vgt,year)
+dat <- na.omit(dat)
+dat <- subset(dat,vgt=='EN')
+points(dat[,1],dat[,3])
+abline(0,1,lty=5)
+abline(lm(dat[,3]~dat[,1]))
+summary(lm(dat[,3]~dat[,1]))
+
+dat <- data.frame(xx1,xx2,yy,vgt)
+dat <- na.omit(dat)
+dat <- subset(dat,vgt=='DB')
+plot(dat[,2],dat[,3],xlim=c(210,350),ylim=c(210,350),pch=19,
+     xlab='MODIS EOS',ylab='Phenocam EOS')
+legend('topleft',c('DB','EN'),pch=c(19,1))
+abline(lm(dat[,3]~dat[,2]))
+summary(lm(dat[,3]~dat[,2]))
+dat <- data.frame(xx1,xx2,yy,vgt)
+dat <- na.omit(dat)
+dat <- subset(dat,vgt=='EN')
+points(dat[,2],dat[,3])
+abline(0,1,lty=5)
+abline(lm(dat[,3]~dat[,2]))
+summary(lm(dat[,3]~dat[,2]))
